@@ -165,21 +165,25 @@ export default function WeeklyCollection({ shgName, members, onBackHome }) {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-stone-500 text-xs uppercase tracking-wide">
-                    <th className="px-3 py-2 text-left font-medium">Week</th>
                     <th className="px-3 py-2 text-left font-medium">Date</th>
-                    <th className="px-3 py-2 text-left font-medium">Day</th>
-                    <th className="px-3 py-2 text-right font-medium">Amount</th>
+                    <th className="px-3 py-2 text-left font-medium">Member Name</th>
+                    <th className="px-3 py-2 text-left font-medium">Cash Book Pg No.</th>
+                    <th className="px-3 py-2 text-right font-medium">Total up to Last Month</th>
+                    <th className="px-3 py-2 text-right font-medium">Weekly Savings</th>
                     <th className="px-3 py-2 text-right font-medium">Running Total</th>
+                    <th className="px-3 py-2 text-left font-medium">Signature</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-stone-100">
                   {m.rows.map((row, i) => (
                     <tr key={i} className={i % 2 === 1 ? "bg-stone-50" : ""}>
-                      <td className="px-3 py-1.5 font-mono text-stone-700">{row.weekNo}</td>
                       <td className="px-3 py-1.5 font-mono text-stone-900">{formatDate(row.date)}</td>
-                      <td className="px-3 py-1.5 text-stone-600">{WEEKDAYS[row.date.getDay()]}</td>
+                      <td className="px-3 py-1.5 text-stone-800">{i === 0 ? members[activeMember] : ""}</td>
+                      <td className="px-3 py-1.5 text-stone-300">{/* blank — fill by hand */}</td>
+                      <td className="px-3 py-1.5 font-mono text-right text-stone-700">{i === 0 ? formatRupee(m.carryIn) : ""}</td>
                       <td className="px-3 py-1.5 font-mono text-right text-stone-700">{formatRupee(row.amount)}</td>
                       <td className="px-3 py-1.5 font-mono text-right font-semibold text-amber-700">{formatRupee(row.running)}</td>
+                      <td className="px-3 py-1.5 text-stone-300">{/* blank — fill by hand */}</td>
                     </tr>
                   ))}
                 </tbody>
