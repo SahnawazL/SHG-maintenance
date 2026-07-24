@@ -44,7 +44,9 @@ export function groupWithRunningTotal(dates, weeklyAmount) {
   dates.forEach((date) => {
     const key = `${date.getFullYear()}-${date.getMonth()}`;
     if (key !== currentKey) {
-      months.push({ key, year: date.getFullYear(), month: date.getMonth(), rows: [] });
+      // carryIn = total already saved before this month starts (the ledger's
+      // "Total savings up to last month" column, filled once per month block)
+      months.push({ key, year: date.getFullYear(), month: date.getMonth(), rows: [], carryIn: cumulative });
       currentKey = key;
     }
     cumulative += weeklyAmount;
