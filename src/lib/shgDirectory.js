@@ -2,9 +2,9 @@
 // (preprodmis.lokos.in). This mirrors the site's own hierarchy: State -> District
 // -> Block -> Grampanchayat -> Village -> SHG Group -> member count.
 //
-// IMPORTANT: only Cachar > Silchar > Berenga > Berengapti / Berengaptii currently
+// IMPORTANT: only Cachar > Silchar > Berenga > Berenga Part 1 / Berenga Part 2 currently
 // have real, verified group-level data (member counts cross-checked against the
-// site's own totals: Berengapti = 174, Berengaptii = 440 — both match exactly).
+// site's own totals: Berenga Part 1 = 174, Berenga Part 2 = 440 — both match exactly).
 // Every other Block / Grampanchayat listed below is real (from the site's own
 // summary tables) but has no group-level data filled in yet, so it will show as
 // empty in the picker — that's intentional, not a bug. Use manual typing for those
@@ -32,7 +32,7 @@ export const SHG_DIRECTORY = {
         Ambikapur: {},
         "Baghadahar Borjurai": {},
         Berenga: {
-          Berengapti: [
+          "Berenga Part 1": [
             ["ANJALI SHG", 12],
             ["FORIDA SHG", 10],
             ["HASNA S.H.G", 11],
@@ -49,7 +49,7 @@ export const SHG_DIRECTORY = {
             ["SUHANA SHG", 10],
             ["VARSHA SHG", 10],
           ],
-          Berengaptii: [
+          "Berenga Part 2": [
             ["ABIDA SHG", 10],
             ["ALI SAHA SHG", 6],
             ["ARMIN S.H.G", 12],
