@@ -110,6 +110,9 @@ export default function WeeklyCollection({ shgName, members, onBackHome }) {
     );
   }
 
+  const now = new Date();
+  const todayMonthIndex = report.months.findIndex((mo) => mo.year === now.getFullYear() && mo.month === now.getMonth());
+
   return (
     <div className="min-h-screen bg-stone-100 dark:bg-black">
       <div className="max-w-3xl mx-auto px-4 py-8 sm:py-10">
@@ -149,9 +152,17 @@ export default function WeeklyCollection({ shgName, members, onBackHome }) {
             </button>
             <div className="flex-1 text-center">
               <span className="text-xs text-stone-500 dark:text-neutral-400">Copy page for</span>
-              <div className="font-semibold text-stone-900 dark:text-stone-100 text-sm">
-                {members[activeMember]} <span className="text-stone-400 dark:text-neutral-500 font-normal">({activeMember + 1} of {members.length})</span>
-              </div>
+              <select
+                value={activeMember}
+                onChange={(e) => setActiveMember(Number(e.target.value))}
+                className="block mx-auto font-semibold text-stone-900 dark:text-stone-100 text-sm bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-emerald-600 dark:focus:ring-emerald-500 rounded-md cursor-pointer"
+              >
+                {members.map((name, i) => (
+                  <option key={i} value={i} className="text-stone-900 dark:text-stone-100">
+                    {name} ({i + 1} of {members.length})
+                  </option>
+                ))}
+              </select>
             </div>
             <button type="button" onClick={() => setActiveMember((i) => Math.min(members.length - 1, i + 1))} disabled={activeMember === members.length - 1} className="p-1.5 rounded-md border border-stone-300 dark:border-neutral-700 disabled:opacity-30 hover:bg-white dark:hover:bg-neutral-800">
               <ChevronRight className="w-4 h-4 dark:text-stone-300" />
@@ -184,12 +195,27 @@ export default function WeeklyCollection({ shgName, members, onBackHome }) {
                 <button type="button" onClick={() => setActiveMonth((i) => Math.max(0, i - 1))} disabled={activeMonth === 0} className="p-1.5 rounded-md border border-stone-300 dark:border-neutral-700 disabled:opacity-30 hover:bg-stone-50 dark:hover:bg-neutral-900">
                   <ChevronLeft className="w-4 h-4 dark:text-stone-300" />
                 </button>
-                <span className="text-xs font-semibold text-stone-700 dark:text-stone-300 min-w-[7.5rem] text-center">
-                  {MONTHS[report.months[activeMonth].month]} {report.months[activeMonth].year}
-                </span>
+                <select
+                  value={activeMonth}
+                  onChange={(e) => setActiveMonth(Number(e.target.value))}
+                  className="text-xs font-semibold text-stone-700 dark:text-stone-300 bg-white dark:bg-neutral-950 border border-stone-300 dark:border-neutral-700 rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-600 dark:focus:ring-emerald-500 cursor-pointer"
+                >
+                  {report.months.map((mo, i) => (
+                    <option key={mo.key} value={i}>{MONTHS[mo.month]} {mo.year}</option>
+                  ))}
+                </select>
                 <button type="button" onClick={() => setActiveMonth((i) => Math.min(report.months.length - 1, i + 1))} disabled={activeMonth === report.months.length - 1} className="p-1.5 rounded-md border border-stone-300 dark:border-neutral-700 disabled:opacity-30 hover:bg-stone-50 dark:hover:bg-neutral-900">
                   <ChevronRight className="w-4 h-4 dark:text-stone-300" />
                 </button>
+                {todayMonthIndex !== -1 && activeMonth !== todayMonthIndex && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveMonth(todayMonthIndex)}
+                    className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 border border-emerald-600 dark:border-emerald-500 rounded-md px-2 py-1.5 hover:bg-emerald-50 dark:hover:bg-emerald-950"
+                  >
+                    Today
+                  </button>
+                )}
               </div>
             )}
           </div>
