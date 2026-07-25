@@ -204,7 +204,29 @@ export default function WeeklyCollection({ shgName, members, onBackHome }) {
                       <span className="font-serif font-semibold text-stone-800 dark:text-stone-200">{MONTHS[m.month]} {m.year}</span>
                       <span className="text-xs font-mono text-stone-600 dark:text-neutral-400">Month total: {formatRupee(m.monthTotal)}</span>
                     </div>
-                    <table className="w-full text-base">
+                    {/* Mobile: compact card list, no horizontal cutoff */}
+                    <div className="sm:hidden divide-y divide-stone-100 dark:divide-neutral-900">
+                      {m.rows.map((row, i) => (
+                        <div key={i} className={`px-4 py-3 ${i % 2 === 1 ? "bg-stone-50 dark:bg-neutral-900/60" : ""}`}>
+                          {i === 0 && (
+                            <div className="flex items-center justify-between text-xs text-stone-500 dark:text-neutral-400 mb-1.5">
+                              <span className="font-semibold text-stone-700 dark:text-stone-300">{members[activeMember]}</span>
+                              <span>Last month: <span className="font-mono">{formatRupee(m.carryIn)}</span></span>
+                            </div>
+                          )}
+                          <div className="flex items-center justify-between">
+                            <span className="font-mono text-sm text-stone-900 dark:text-stone-100">{formatDate(row.date)}</span>
+                            <span className="font-mono text-base font-semibold text-amber-700 dark:text-amber-400">{formatRupee(row.running)}</span>
+                          </div>
+                          <div className="text-xs text-stone-500 dark:text-neutral-400 mt-0.5">
+                            Weekly savings: <span className="font-mono text-stone-700 dark:text-neutral-300">{formatRupee(row.amount)}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Desktop / tablet: full table */}
+                    <table className="w-full text-base hidden sm:table">
                       <thead>
                         <tr className="text-stone-500 dark:text-neutral-400 text-xs uppercase tracking-wide">
                           <th className="px-3 py-3 text-left font-medium">Date</th>
@@ -242,7 +264,29 @@ export default function WeeklyCollection({ shgName, members, onBackHome }) {
                     <span className="font-serif font-semibold text-stone-800 dark:text-stone-200">{MONTHS[m.month]} {m.year}</span>
                     <span className="text-xs font-mono text-stone-600 dark:text-neutral-400">Month total: {formatRupee(m.monthTotal)}</span>
                   </div>
-                  <table className="w-full text-sm">
+                  {/* Mobile: compact card list */}
+                  <div className="sm:hidden divide-y divide-stone-100 dark:divide-neutral-900">
+                    {m.rows.map((row, i) => (
+                      <div key={i} className={`px-4 py-2.5 ${i % 2 === 1 ? "bg-stone-50 dark:bg-neutral-900/60" : ""}`}>
+                        {i === 0 && (
+                          <div className="flex items-center justify-between text-xs text-stone-500 dark:text-neutral-400 mb-1">
+                            <span className="font-semibold text-stone-700 dark:text-stone-300">{members[activeMember]}</span>
+                            <span>Last month: <span className="font-mono">{formatRupee(m.carryIn)}</span></span>
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-sm text-stone-900 dark:text-stone-100">{formatDate(row.date)}</span>
+                          <span className="font-mono text-sm font-semibold text-amber-700 dark:text-amber-400">{formatRupee(row.running)}</span>
+                        </div>
+                        <div className="text-xs text-stone-500 dark:text-neutral-400">
+                          Weekly: <span className="font-mono text-stone-700 dark:text-neutral-300">{formatRupee(row.amount)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop / tablet: full table */}
+                  <table className="w-full text-sm hidden sm:table">
                     <thead>
                       <tr className="text-stone-500 dark:text-neutral-400 text-xs uppercase tracking-wide">
                         <th className="px-3 py-2 text-left font-medium">Date</th>
