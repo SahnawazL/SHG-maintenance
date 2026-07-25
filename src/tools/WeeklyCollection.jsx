@@ -3,12 +3,12 @@ import { ChevronLeft, ChevronRight, Users, Calendar, Wallet, ArrowLeft } from "l
 import { WEEKDAYS, MONTHS, YEARS, formatDate, formatRupee, computeMeetingDates, groupWithRunningTotal } from "../lib/dates.js";
 
 const inputClass =
-  "w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600";
+  "w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 dark:border-neutral-700 dark:bg-neutral-950 dark:text-stone-100 dark:focus:ring-emerald-500 dark:focus:border-emerald-500 dark:placeholder:text-neutral-600";
 
 function Field({ label, children }) {
   return (
     <label className="block">
-      <span className="block text-xs font-semibold uppercase tracking-wide text-stone-500 mb-1.5">{label}</span>
+      <span className="block text-xs font-semibold uppercase tracking-wide text-stone-500 dark:text-neutral-400 mb-1.5">{label}</span>
       {children}
     </label>
   );
@@ -42,233 +42,237 @@ export default function WeeklyCollection({ shgName, members, onBackHome }) {
 
   if (stage === "setup") {
     return (
-      <div className="max-w-xl mx-auto px-4 py-8 sm:py-10">
-        <button type="button" onClick={onBackHome} className="inline-flex items-center gap-1.5 text-sm text-stone-600 hover:text-stone-900 mb-5">
-          <ArrowLeft className="w-4 h-4" /> Back to tools
-        </button>
-
-        <p className="text-xs font-semibold tracking-widest text-emerald-700 uppercase mb-2">{shgName}</p>
-        <h1 className="text-2xl font-serif font-semibold text-stone-900 leading-tight mb-1">Weekly Collection Report</h1>
-        <p className="text-stone-600 text-sm mb-6">Every meeting date, weekday and running total, calculated automatically.</p>
-
-        <div className="bg-white rounded-xl border border-stone-200 shadow-sm p-5 sm:p-6 space-y-5">
-          <Field label="Weekly Collection (₹ per member)">
-            <input
-              type="number"
-              min={1}
-              className={inputClass}
-              value={weeklyAmount}
-              onChange={(e) => setWeeklyAmount(Math.max(0, Number(e.target.value) || 0))}
-            />
-          </Field>
-
-          <Field label="Meeting Day">
-            <select className={inputClass} value={weekday} onChange={(e) => setWeekday(Number(e.target.value))}>
-              {WEEKDAYS.map((w, i) => (
-                <option key={w} value={i}>Every {w}</option>
-              ))}
-            </select>
-          </Field>
-
-          <div>
-            <span className="block text-xs font-semibold uppercase tracking-wide text-stone-500 mb-1.5">Start Month</span>
-            <div className="grid grid-cols-2 gap-3">
-              <select className={inputClass} value={startMonth} onChange={(e) => setStartMonth(Number(e.target.value))}>
-                {MONTHS.map((m, i) => <option key={m} value={i}>{m}</option>)}
-              </select>
-              <select className={inputClass} value={startYear} onChange={(e) => setStartYear(Number(e.target.value))}>
-                {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <span className="block text-xs font-semibold uppercase tracking-wide text-stone-500 mb-1.5">End Month</span>
-            <div className="grid grid-cols-2 gap-3">
-              <select className={inputClass} value={endMonth} onChange={(e) => setEndMonth(Number(e.target.value))}>
-                {MONTHS.map((m, i) => <option key={m} value={i}>{m}</option>)}
-              </select>
-              <select className={inputClass} value={endYear} onChange={(e) => setEndYear(Number(e.target.value))}>
-                {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
-              </select>
-            </div>
-            {startAfterEnd && <p className="text-xs text-red-600 mt-1.5">End month must be after start month.</p>}
-          </div>
-
-          <button
-            type="button"
-            disabled={!canGenerate}
-            onClick={handleGenerate}
-            className="w-full rounded-md bg-emerald-700 text-white font-semibold py-2.5 text-sm hover:bg-emerald-800 disabled:bg-stone-300 disabled:cursor-not-allowed transition-colors"
-          >
-            Generate Report
+      <div className="min-h-screen bg-stone-100 dark:bg-black">
+        <div className="max-w-xl mx-auto px-4 py-8 sm:py-10">
+          <button type="button" onClick={onBackHome} className="inline-flex items-center gap-1.5 text-sm text-stone-600 dark:text-neutral-400 hover:text-stone-900 dark:hover:text-stone-100 mb-5">
+            <ArrowLeft className="w-4 h-4" /> Back to tools
           </button>
+
+          <p className="text-xs font-semibold tracking-widest text-emerald-700 dark:text-emerald-400 uppercase mb-2">{shgName}</p>
+          <h1 className="text-2xl font-serif font-semibold text-stone-900 dark:text-stone-100 leading-tight mb-1">Weekly Collection Report</h1>
+          <p className="text-stone-600 dark:text-neutral-400 text-sm mb-6">Every meeting date, weekday and running total, calculated automatically.</p>
+
+          <div className="bg-white dark:bg-neutral-950 rounded-xl border border-stone-200 dark:border-neutral-800 shadow-sm p-5 sm:p-6 space-y-5">
+            <Field label="Weekly Collection (₹ per member)">
+              <input
+                type="number"
+                min={1}
+                className={inputClass}
+                value={weeklyAmount}
+                onChange={(e) => setWeeklyAmount(Math.max(0, Number(e.target.value) || 0))}
+              />
+            </Field>
+
+            <Field label="Meeting Day">
+              <select className={inputClass} value={weekday} onChange={(e) => setWeekday(Number(e.target.value))}>
+                {WEEKDAYS.map((w, i) => (
+                  <option key={w} value={i}>Every {w}</option>
+                ))}
+              </select>
+            </Field>
+
+            <div>
+              <span className="block text-xs font-semibold uppercase tracking-wide text-stone-500 dark:text-neutral-400 mb-1.5">Start Month</span>
+              <div className="grid grid-cols-2 gap-3">
+                <select className={inputClass} value={startMonth} onChange={(e) => setStartMonth(Number(e.target.value))}>
+                  {MONTHS.map((m, i) => <option key={m} value={i}>{m}</option>)}
+                </select>
+                <select className={inputClass} value={startYear} onChange={(e) => setStartYear(Number(e.target.value))}>
+                  {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <span className="block text-xs font-semibold uppercase tracking-wide text-stone-500 dark:text-neutral-400 mb-1.5">End Month</span>
+              <div className="grid grid-cols-2 gap-3">
+                <select className={inputClass} value={endMonth} onChange={(e) => setEndMonth(Number(e.target.value))}>
+                  {MONTHS.map((m, i) => <option key={m} value={i}>{m}</option>)}
+                </select>
+                <select className={inputClass} value={endYear} onChange={(e) => setEndYear(Number(e.target.value))}>
+                  {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
+                </select>
+              </div>
+              {startAfterEnd && <p className="text-xs text-red-600 dark:text-red-400 mt-1.5">End month must be after start month.</p>}
+            </div>
+
+            <button
+              type="button"
+              disabled={!canGenerate}
+              onClick={handleGenerate}
+              className="w-full rounded-md bg-emerald-700 dark:bg-emerald-600 text-white font-semibold py-2.5 text-sm hover:bg-emerald-800 dark:hover:bg-emerald-500 disabled:bg-stone-300 dark:disabled:bg-neutral-800 disabled:cursor-not-allowed transition-colors"
+            >
+              Generate Report
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 sm:py-10">
-      <button type="button" onClick={() => setStage("setup")} className="inline-flex items-center gap-1.5 text-sm text-stone-600 hover:text-stone-900 mb-4">
-        <ArrowLeft className="w-4 h-4" /> Back to setup
-      </button>
+    <div className="min-h-screen bg-stone-100 dark:bg-black">
+      <div className="max-w-3xl mx-auto px-4 py-8 sm:py-10">
+        <button type="button" onClick={() => setStage("setup")} className="inline-flex items-center gap-1.5 text-sm text-stone-600 dark:text-neutral-400 hover:text-stone-900 dark:hover:text-stone-100 mb-4">
+          <ArrowLeft className="w-4 h-4" /> Back to setup
+        </button>
 
-      <div className="bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
-        <div className="bg-emerald-700 text-white px-5 py-5 sm:px-7 sm:py-6">
-          <p className="text-xs uppercase tracking-widest text-emerald-100 mb-1">Weekly Collection Register</p>
-          <h1 className="text-2xl font-serif font-semibold">{shgName}</h1>
-          <div className="flex flex-wrap gap-x-5 gap-y-1 mt-3 text-sm text-emerald-50">
-            <span className="inline-flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Every {WEEKDAYS[weekday]}</span>
-            <span className="inline-flex items-center gap-1.5"><Wallet className="w-3.5 h-3.5" /> {formatRupee(weeklyAmount)} / member / week</span>
-            <span className="inline-flex items-center gap-1.5"><Users className="w-3.5 h-3.5" /> {members.length} members</span>
-          </div>
-          <p className="text-xs text-emerald-100 mt-2">{MONTHS[startMonth]} {startYear} → {MONTHS[endMonth]} {endYear}</p>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-stone-200 border-b border-stone-200">
-          {[
-            ["Total Meetings", report.totalMeetings],
-            ["Months Covered", report.totalMonths],
-            ["Per-Member Total", formatRupee(report.totalPerMember)],
-            ["Group Total", formatRupee(report.totalGroup)],
-          ].map(([label, val]) => (
-            <div key={label} className="px-4 py-3 text-center">
-              <div className="text-lg font-mono font-semibold text-stone-900">{val}</div>
-              <div className="text-[11px] text-stone-500 uppercase tracking-wide mt-0.5">{label}</div>
+        <div className="bg-white dark:bg-neutral-950 rounded-xl border border-stone-200 dark:border-neutral-800 shadow-sm overflow-hidden">
+          <div className="bg-emerald-700 dark:bg-emerald-800 text-white px-5 py-5 sm:px-7 sm:py-6">
+            <p className="text-xs uppercase tracking-widest text-emerald-100 dark:text-emerald-200 mb-1">Weekly Collection Register</p>
+            <h1 className="text-2xl font-serif font-semibold">{shgName}</h1>
+            <div className="flex flex-wrap gap-x-5 gap-y-1 mt-3 text-sm text-emerald-50 dark:text-emerald-100">
+              <span className="inline-flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Every {WEEKDAYS[weekday]}</span>
+              <span className="inline-flex items-center gap-1.5"><Wallet className="w-3.5 h-3.5" /> {formatRupee(weeklyAmount)} / member / week</span>
+              <span className="inline-flex items-center gap-1.5"><Users className="w-3.5 h-3.5" /> {members.length} members</span>
             </div>
-          ))}
-        </div>
-
-        <div className="flex items-center gap-2 px-5 sm:px-7 py-3 bg-stone-50 border-b border-stone-200">
-          <button type="button" onClick={() => setActiveMember((i) => Math.max(0, i - 1))} disabled={activeMember === 0} className="p-1.5 rounded-md border border-stone-300 disabled:opacity-30 hover:bg-white">
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <div className="flex-1 text-center">
-            <span className="text-xs text-stone-500">Copy page for</span>
-            <div className="font-semibold text-stone-900 text-sm">
-              {members[activeMember]} <span className="text-stone-400 font-normal">({activeMember + 1} of {members.length})</span>
-            </div>
+            <p className="text-xs text-emerald-100 dark:text-emerald-200 mt-2">{MONTHS[startMonth]} {startYear} → {MONTHS[endMonth]} {endYear}</p>
           </div>
-          <button type="button" onClick={() => setActiveMember((i) => Math.min(members.length - 1, i + 1))} disabled={activeMember === members.length - 1} className="p-1.5 rounded-md border border-stone-300 disabled:opacity-30 hover:bg-white">
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-        <p className="text-center text-xs text-stone-500 px-5 pt-3">
-          Dates, weekday and running totals below are identical for every member — only the name changes. Write this same table into each member's page.
-        </p>
 
-        <div className="flex items-center justify-between gap-2 px-5 sm:px-7 py-3 border-b border-stone-200">
-          <div className="inline-flex rounded-md border border-stone-300 overflow-hidden">
-            <button
-              type="button"
-              onClick={() => setViewMode("compact")}
-              className={`px-3 py-1.5 text-xs font-semibold ${viewMode === "compact" ? "bg-emerald-700 text-white" : "bg-white text-stone-600 hover:bg-stone-50"}`}
-            >
-              Compact (one month)
+          <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-stone-200 dark:divide-neutral-800 border-b border-stone-200 dark:border-neutral-800">
+            {[
+              ["Total Meetings", report.totalMeetings],
+              ["Months Covered", report.totalMonths],
+              ["Per-Member Total", formatRupee(report.totalPerMember)],
+              ["Group Total", formatRupee(report.totalGroup)],
+            ].map(([label, val]) => (
+              <div key={label} className="px-4 py-3 text-center">
+                <div className="text-lg font-mono font-semibold text-stone-900 dark:text-stone-100">{val}</div>
+                <div className="text-[11px] text-stone-500 dark:text-neutral-500 uppercase tracking-wide mt-0.5">{label}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2 px-5 sm:px-7 py-3 bg-stone-50 dark:bg-neutral-900 border-b border-stone-200 dark:border-neutral-800">
+            <button type="button" onClick={() => setActiveMember((i) => Math.max(0, i - 1))} disabled={activeMember === 0} className="p-1.5 rounded-md border border-stone-300 dark:border-neutral-700 disabled:opacity-30 hover:bg-white dark:hover:bg-neutral-800">
+              <ChevronLeft className="w-4 h-4 dark:text-stone-300" />
             </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("all")}
-              className={`px-3 py-1.5 text-xs font-semibold border-l border-stone-300 ${viewMode === "all" ? "bg-emerald-700 text-white" : "bg-white text-stone-600 hover:bg-stone-50"}`}
-            >
-              All months
+            <div className="flex-1 text-center">
+              <span className="text-xs text-stone-500 dark:text-neutral-400">Copy page for</span>
+              <div className="font-semibold text-stone-900 dark:text-stone-100 text-sm">
+                {members[activeMember]} <span className="text-stone-400 dark:text-neutral-500 font-normal">({activeMember + 1} of {members.length})</span>
+              </div>
+            </div>
+            <button type="button" onClick={() => setActiveMember((i) => Math.min(members.length - 1, i + 1))} disabled={activeMember === members.length - 1} className="p-1.5 rounded-md border border-stone-300 dark:border-neutral-700 disabled:opacity-30 hover:bg-white dark:hover:bg-neutral-800">
+              <ChevronRight className="w-4 h-4 dark:text-stone-300" />
             </button>
           </div>
+          <p className="text-center text-xs text-stone-500 dark:text-neutral-500 px-5 pt-3">
+            Dates, weekday and running totals below are identical for every member — only the name changes. Write this same table into each member's page.
+          </p>
 
-          {viewMode === "compact" && (
-            <div className="flex items-center gap-1.5">
-              <button type="button" onClick={() => setActiveMonth((i) => Math.max(0, i - 1))} disabled={activeMonth === 0} className="p-1.5 rounded-md border border-stone-300 disabled:opacity-30 hover:bg-stone-50">
-                <ChevronLeft className="w-4 h-4" />
+          <div className="flex items-center justify-between gap-2 px-5 sm:px-7 py-3 border-b border-stone-200 dark:border-neutral-800">
+            <div className="inline-flex rounded-md border border-stone-300 dark:border-neutral-700 overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setViewMode("compact")}
+                className={`px-3 py-1.5 text-xs font-semibold ${viewMode === "compact" ? "bg-emerald-700 dark:bg-emerald-600 text-white" : "bg-white dark:bg-neutral-950 text-stone-600 dark:text-neutral-400 hover:bg-stone-50 dark:hover:bg-neutral-900"}`}
+              >
+                Compact (one month)
               </button>
-              <span className="text-xs font-semibold text-stone-700 min-w-[7.5rem] text-center">
-                {MONTHS[report.months[activeMonth].month]} {report.months[activeMonth].year}
-              </span>
-              <button type="button" onClick={() => setActiveMonth((i) => Math.min(report.months.length - 1, i + 1))} disabled={activeMonth === report.months.length - 1} className="p-1.5 rounded-md border border-stone-300 disabled:opacity-30 hover:bg-stone-50">
-                <ChevronRight className="w-4 h-4" />
+              <button
+                type="button"
+                onClick={() => setViewMode("all")}
+                className={`px-3 py-1.5 text-xs font-semibold border-l border-stone-300 dark:border-neutral-700 ${viewMode === "all" ? "bg-emerald-700 dark:bg-emerald-600 text-white" : "bg-white dark:bg-neutral-950 text-stone-600 dark:text-neutral-400 hover:bg-stone-50 dark:hover:bg-neutral-900"}`}
+              >
+                All months
               </button>
             </div>
-          )}
-        </div>
 
-        {viewMode === "compact" ? (
-          <div className="px-4 sm:px-7 py-5">
-            {(() => {
-              const m = report.months[activeMonth];
-              return (
-                <div className="border border-stone-200 rounded-lg overflow-hidden">
-                  <div className="bg-stone-100 px-4 py-2.5 flex items-center justify-between border-b border-stone-200">
-                    <span className="font-serif font-semibold text-stone-800">{MONTHS[m.month]} {m.year}</span>
-                    <span className="text-xs font-mono text-stone-600">Month total: {formatRupee(m.monthTotal)}</span>
+            {viewMode === "compact" && (
+              <div className="flex items-center gap-1.5">
+                <button type="button" onClick={() => setActiveMonth((i) => Math.max(0, i - 1))} disabled={activeMonth === 0} className="p-1.5 rounded-md border border-stone-300 dark:border-neutral-700 disabled:opacity-30 hover:bg-stone-50 dark:hover:bg-neutral-900">
+                  <ChevronLeft className="w-4 h-4 dark:text-stone-300" />
+                </button>
+                <span className="text-xs font-semibold text-stone-700 dark:text-stone-300 min-w-[7.5rem] text-center">
+                  {MONTHS[report.months[activeMonth].month]} {report.months[activeMonth].year}
+                </span>
+                <button type="button" onClick={() => setActiveMonth((i) => Math.min(report.months.length - 1, i + 1))} disabled={activeMonth === report.months.length - 1} className="p-1.5 rounded-md border border-stone-300 dark:border-neutral-700 disabled:opacity-30 hover:bg-stone-50 dark:hover:bg-neutral-900">
+                  <ChevronRight className="w-4 h-4 dark:text-stone-300" />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {viewMode === "compact" ? (
+            <div className="px-4 sm:px-7 py-5">
+              {(() => {
+                const m = report.months[activeMonth];
+                return (
+                  <div className="border border-stone-200 dark:border-neutral-800 rounded-lg overflow-hidden">
+                    <div className="bg-stone-100 dark:bg-neutral-900 px-4 py-2.5 flex items-center justify-between border-b border-stone-200 dark:border-neutral-800">
+                      <span className="font-serif font-semibold text-stone-800 dark:text-stone-200">{MONTHS[m.month]} {m.year}</span>
+                      <span className="text-xs font-mono text-stone-600 dark:text-neutral-400">Month total: {formatRupee(m.monthTotal)}</span>
+                    </div>
+                    <table className="w-full text-base">
+                      <thead>
+                        <tr className="text-stone-500 dark:text-neutral-400 text-xs uppercase tracking-wide">
+                          <th className="px-3 py-3 text-left font-medium">Date</th>
+                          <th className="px-3 py-3 text-left font-medium">Member Name</th>
+                          <th className="px-3 py-3 text-left font-medium">Cash Book Pg No.</th>
+                          <th className="px-3 py-3 text-right font-medium">Total up to Last Month</th>
+                          <th className="px-3 py-3 text-right font-medium">Weekly Savings</th>
+                          <th className="px-3 py-3 text-right font-medium">Running Total</th>
+                          <th className="px-3 py-3 text-left font-medium">Signature</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-stone-100 dark:divide-neutral-900">
+                        {m.rows.map((row, i) => (
+                          <tr key={i} className={i % 2 === 1 ? "bg-stone-50 dark:bg-neutral-900/60" : ""}>
+                            <td className="px-3 py-4 font-mono text-stone-900 dark:text-stone-100">{formatDate(row.date)}</td>
+                            <td className="px-3 py-4 text-stone-800 dark:text-stone-200">{i === 0 ? members[activeMember] : ""}</td>
+                            <td className="px-3 py-4 text-stone-300 dark:text-neutral-700">{/* blank — fill by hand */}</td>
+                            <td className="px-3 py-4 font-mono text-right text-stone-700 dark:text-neutral-300">{i === 0 ? formatRupee(m.carryIn) : ""}</td>
+                            <td className="px-3 py-4 font-mono text-right text-stone-700 dark:text-neutral-300">{formatRupee(row.amount)}</td>
+                            <td className="px-3 py-4 font-mono text-right font-semibold text-amber-700 dark:text-amber-400">{formatRupee(row.running)}</td>
+                            <td className="px-3 py-4 text-stone-300 dark:text-neutral-700">{/* blank — fill by hand */}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                  <table className="w-full text-base">
+                );
+              })()}
+            </div>
+          ) : (
+            <div className="px-4 sm:px-7 py-5 space-y-6">
+              {report.months.map((m) => (
+                <div key={m.key} className="border border-stone-200 dark:border-neutral-800 rounded-lg overflow-hidden">
+                  <div className="bg-stone-100 dark:bg-neutral-900 px-4 py-2 flex items-center justify-between border-b border-stone-200 dark:border-neutral-800">
+                    <span className="font-serif font-semibold text-stone-800 dark:text-stone-200">{MONTHS[m.month]} {m.year}</span>
+                    <span className="text-xs font-mono text-stone-600 dark:text-neutral-400">Month total: {formatRupee(m.monthTotal)}</span>
+                  </div>
+                  <table className="w-full text-sm">
                     <thead>
-                      <tr className="text-stone-500 text-xs uppercase tracking-wide">
-                        <th className="px-3 py-3 text-left font-medium">Date</th>
-                        <th className="px-3 py-3 text-left font-medium">Member Name</th>
-                        <th className="px-3 py-3 text-left font-medium">Cash Book Pg No.</th>
-                        <th className="px-3 py-3 text-right font-medium">Total up to Last Month</th>
-                        <th className="px-3 py-3 text-right font-medium">Weekly Savings</th>
-                        <th className="px-3 py-3 text-right font-medium">Running Total</th>
-                        <th className="px-3 py-3 text-left font-medium">Signature</th>
+                      <tr className="text-stone-500 dark:text-neutral-400 text-xs uppercase tracking-wide">
+                        <th className="px-3 py-2 text-left font-medium">Date</th>
+                        <th className="px-3 py-2 text-left font-medium">Member Name</th>
+                        <th className="px-3 py-2 text-left font-medium">Cash Book Pg No.</th>
+                        <th className="px-3 py-2 text-right font-medium">Total up to Last Month</th>
+                        <th className="px-3 py-2 text-right font-medium">Weekly Savings</th>
+                        <th className="px-3 py-2 text-right font-medium">Running Total</th>
+                        <th className="px-3 py-2 text-left font-medium">Signature</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-stone-100">
+                    <tbody className="divide-y divide-stone-100 dark:divide-neutral-900">
                       {m.rows.map((row, i) => (
-                        <tr key={i} className={i % 2 === 1 ? "bg-stone-50" : ""}>
-                          <td className="px-3 py-4 font-mono text-stone-900">{formatDate(row.date)}</td>
-                          <td className="px-3 py-4 text-stone-800">{i === 0 ? members[activeMember] : ""}</td>
-                          <td className="px-3 py-4 text-stone-300">{/* blank — fill by hand */}</td>
-                          <td className="px-3 py-4 font-mono text-right text-stone-700">{i === 0 ? formatRupee(m.carryIn) : ""}</td>
-                          <td className="px-3 py-4 font-mono text-right text-stone-700">{formatRupee(row.amount)}</td>
-                          <td className="px-3 py-4 font-mono text-right font-semibold text-amber-700">{formatRupee(row.running)}</td>
-                          <td className="px-3 py-4 text-stone-300">{/* blank — fill by hand */}</td>
+                        <tr key={i} className={i % 2 === 1 ? "bg-stone-50 dark:bg-neutral-900/60" : ""}>
+                          <td className="px-3 py-1.5 font-mono text-stone-900 dark:text-stone-100">{formatDate(row.date)}</td>
+                          <td className="px-3 py-1.5 text-stone-800 dark:text-stone-200">{i === 0 ? members[activeMember] : ""}</td>
+                          <td className="px-3 py-1.5 text-stone-300 dark:text-neutral-700">{/* blank — fill by hand */}</td>
+                          <td className="px-3 py-1.5 font-mono text-right text-stone-700 dark:text-neutral-300">{i === 0 ? formatRupee(m.carryIn) : ""}</td>
+                          <td className="px-3 py-1.5 font-mono text-right text-stone-700 dark:text-neutral-300">{formatRupee(row.amount)}</td>
+                          <td className="px-3 py-1.5 font-mono text-right font-semibold text-amber-700 dark:text-amber-400">{formatRupee(row.running)}</td>
+                          <td className="px-3 py-1.5 text-stone-300 dark:text-neutral-700">{/* blank — fill by hand */}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-              );
-            })()}
-          </div>
-        ) : (
-          <div className="px-4 sm:px-7 py-5 space-y-6">
-            {report.months.map((m) => (
-              <div key={m.key} className="border border-stone-200 rounded-lg overflow-hidden">
-                <div className="bg-stone-100 px-4 py-2 flex items-center justify-between border-b border-stone-200">
-                  <span className="font-serif font-semibold text-stone-800">{MONTHS[m.month]} {m.year}</span>
-                  <span className="text-xs font-mono text-stone-600">Month total: {formatRupee(m.monthTotal)}</span>
-                </div>
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-stone-500 text-xs uppercase tracking-wide">
-                      <th className="px-3 py-2 text-left font-medium">Date</th>
-                      <th className="px-3 py-2 text-left font-medium">Member Name</th>
-                      <th className="px-3 py-2 text-left font-medium">Cash Book Pg No.</th>
-                      <th className="px-3 py-2 text-right font-medium">Total up to Last Month</th>
-                      <th className="px-3 py-2 text-right font-medium">Weekly Savings</th>
-                      <th className="px-3 py-2 text-right font-medium">Running Total</th>
-                      <th className="px-3 py-2 text-left font-medium">Signature</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-stone-100">
-                    {m.rows.map((row, i) => (
-                      <tr key={i} className={i % 2 === 1 ? "bg-stone-50" : ""}>
-                        <td className="px-3 py-1.5 font-mono text-stone-900">{formatDate(row.date)}</td>
-                        <td className="px-3 py-1.5 text-stone-800">{i === 0 ? members[activeMember] : ""}</td>
-                        <td className="px-3 py-1.5 text-stone-300">{/* blank — fill by hand */}</td>
-                        <td className="px-3 py-1.5 font-mono text-right text-stone-700">{i === 0 ? formatRupee(m.carryIn) : ""}</td>
-                        <td className="px-3 py-1.5 font-mono text-right text-stone-700">{formatRupee(row.amount)}</td>
-                        <td className="px-3 py-1.5 font-mono text-right font-semibold text-amber-700">{formatRupee(row.running)}</td>
-                        <td className="px-3 py-1.5 text-stone-300">{/* blank — fill by hand */}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
