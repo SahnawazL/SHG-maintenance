@@ -1,3 +1,17 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+html {
+  color-scheme: light;
+}
+html.dark {
+  color-scheme: dark;
+}
+body,
+button,
+input,
+select,
+textarea {
+  transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease;
+}
