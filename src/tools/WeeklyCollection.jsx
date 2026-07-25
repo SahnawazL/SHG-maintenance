@@ -172,19 +172,19 @@ export default function WeeklyCollection({ shgName, members, onBackHome }) {
             Dates, weekday and running totals below are identical for every member — only the name changes. Write this same table into each member's page.
           </p>
 
-          <div className="flex items-center justify-between gap-2 px-5 sm:px-7 py-3 border-b border-stone-200 dark:border-neutral-800">
-            <div className="inline-flex rounded-md border border-stone-300 dark:border-neutral-700 overflow-hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-4 sm:px-7 py-3 border-b border-stone-200 dark:border-neutral-800">
+            <div className="inline-flex rounded-md border border-stone-300 dark:border-neutral-700 overflow-hidden self-start">
               <button
                 type="button"
                 onClick={() => setViewMode("compact")}
-                className={`px-3 py-1.5 text-xs font-semibold ${viewMode === "compact" ? "bg-emerald-700 dark:bg-emerald-600 text-white" : "bg-white dark:bg-neutral-950 text-stone-600 dark:text-neutral-400 hover:bg-stone-50 dark:hover:bg-neutral-900"}`}
+                className={`px-3 py-1.5 text-xs font-semibold whitespace-nowrap ${viewMode === "compact" ? "bg-emerald-700 dark:bg-emerald-600 text-white" : "bg-white dark:bg-neutral-950 text-stone-600 dark:text-neutral-400 hover:bg-stone-50 dark:hover:bg-neutral-900"}`}
               >
-                Compact (one month)
+                Compact<span className="hidden sm:inline"> (one month)</span>
               </button>
               <button
                 type="button"
                 onClick={() => setViewMode("all")}
-                className={`px-3 py-1.5 text-xs font-semibold border-l border-stone-300 dark:border-neutral-700 ${viewMode === "all" ? "bg-emerald-700 dark:bg-emerald-600 text-white" : "bg-white dark:bg-neutral-950 text-stone-600 dark:text-neutral-400 hover:bg-stone-50 dark:hover:bg-neutral-900"}`}
+                className={`px-3 py-1.5 text-xs font-semibold whitespace-nowrap border-l border-stone-300 dark:border-neutral-700 ${viewMode === "all" ? "bg-emerald-700 dark:bg-emerald-600 text-white" : "bg-white dark:bg-neutral-950 text-stone-600 dark:text-neutral-400 hover:bg-stone-50 dark:hover:bg-neutral-900"}`}
               >
                 All months
               </button>
@@ -192,26 +192,26 @@ export default function WeeklyCollection({ shgName, members, onBackHome }) {
 
             {viewMode === "compact" && (
               <div className="flex items-center gap-1.5">
-                <button type="button" onClick={() => setActiveMonth((i) => Math.max(0, i - 1))} disabled={activeMonth === 0} className="p-1.5 rounded-md border border-stone-300 dark:border-neutral-700 disabled:opacity-30 hover:bg-stone-50 dark:hover:bg-neutral-900">
+                <button type="button" onClick={() => setActiveMonth((i) => Math.max(0, i - 1))} disabled={activeMonth === 0} className="shrink-0 p-1.5 rounded-md border border-stone-300 dark:border-neutral-700 disabled:opacity-30 hover:bg-stone-50 dark:hover:bg-neutral-900">
                   <ChevronLeft className="w-4 h-4 dark:text-stone-300" />
                 </button>
                 <select
                   value={activeMonth}
                   onChange={(e) => setActiveMonth(Number(e.target.value))}
-                  className="text-xs font-semibold text-stone-700 dark:text-stone-300 bg-white dark:bg-neutral-950 border border-stone-300 dark:border-neutral-700 rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-600 dark:focus:ring-emerald-500 cursor-pointer"
+                  className="flex-1 min-w-0 sm:flex-none text-xs font-semibold text-stone-700 dark:text-stone-300 bg-white dark:bg-neutral-950 border border-stone-300 dark:border-neutral-700 rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-600 dark:focus:ring-emerald-500 cursor-pointer"
                 >
                   {report.months.map((mo, i) => (
                     <option key={mo.key} value={i}>{MONTHS[mo.month]} {mo.year}</option>
                   ))}
                 </select>
-                <button type="button" onClick={() => setActiveMonth((i) => Math.min(report.months.length - 1, i + 1))} disabled={activeMonth === report.months.length - 1} className="p-1.5 rounded-md border border-stone-300 dark:border-neutral-700 disabled:opacity-30 hover:bg-stone-50 dark:hover:bg-neutral-900">
+                <button type="button" onClick={() => setActiveMonth((i) => Math.min(report.months.length - 1, i + 1))} disabled={activeMonth === report.months.length - 1} className="shrink-0 p-1.5 rounded-md border border-stone-300 dark:border-neutral-700 disabled:opacity-30 hover:bg-stone-50 dark:hover:bg-neutral-900">
                   <ChevronRight className="w-4 h-4 dark:text-stone-300" />
                 </button>
                 {todayMonthIndex !== -1 && activeMonth !== todayMonthIndex && (
                   <button
                     type="button"
                     onClick={() => setActiveMonth(todayMonthIndex)}
-                    className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 border border-emerald-600 dark:border-emerald-500 rounded-md px-2 py-1.5 hover:bg-emerald-50 dark:hover:bg-emerald-950"
+                    className="shrink-0 whitespace-nowrap text-xs font-semibold text-emerald-700 dark:text-emerald-400 border border-emerald-600 dark:border-emerald-500 rounded-md px-2 py-1.5 hover:bg-emerald-50 dark:hover:bg-emerald-950"
                   >
                     Today
                   </button>
