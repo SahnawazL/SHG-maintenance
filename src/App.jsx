@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Wallet, FileText, ChevronRight, Search, MapPin, X } from "lucide-react";
+import { Wallet, FileText, ChevronRight, Search, MapPin, X, Plus, Minus, Lock } from "lucide-react";
 import WeeklyCollection from "./tools/WeeklyCollection.jsx";
 import ResolutionLog from "./tools/ResolutionLog.jsx";
 import ThemeToggle from "./components/ThemeToggle.jsx";
@@ -8,6 +8,55 @@ import { SHG_DIRECTORY, flattenDirectory } from "./lib/shgDirectory.js";
 
 const inputClass =
   "w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 dark:border-neutral-700 dark:bg-neutral-950 dark:text-stone-100 dark:focus:ring-emerald-500 dark:focus:border-emerald-500 dark:placeholder:text-neutral-600";
+
+// Shared keyframes for the autocomplete/option-list pop-in (suggestIn) and the
+// full-screen transition between setup / WeeklyCollection / ResolutionLog
+// (screenIn). Declared once and re-injected via <style> on whichever screen
+// is mounted, since the three screens are separate top-level returns.
+const SCREEN_ANIM_CSS = `
+  @keyframes suggestIn {
+    from { opacity: 0; transform: scaleY(0.96) translateY(-2px); }
+    to { opacity: 1; transform: scaleY(1) translateY(0); }
+  }
+  @keyframes screenIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    @keyframes suggestIn { from, to { opacity: 1; transform: none; } }
+    @keyframes screenIn { from, to { opacity: 1; transform: none; } }
+  }
+
+  /* Slim scrollbar for the app's overflow-y-auto lists (autocomplete,
+     location-browser option lists, member-name grid). Falls back to the
+     browser default in engines that support neither API. */
+  .slim-scroll { scrollbar-width: thin; scrollbar-color: rgb(168 162 158) transparent; }
+  .slim-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+  .slim-scroll::-webkit-scrollbar-track { background: transparent; }
+  .slim-scroll::-webkit-scrollbar-thumb { background-color: rgb(168 162 158); border-radius: 9999px; }
+  .slim-scroll::-webkit-scrollbar-thumb:hover { background-color: rgb(120 113 108); }
+  .dark .slim-scroll { scrollbar-color: rgb(64 64 64) transparent; }
+  .dark .slim-scroll::-webkit-scrollbar-thumb { background-color: rgb(64 64 64); }
+  .dark .slim-scroll::-webkit-scrollbar-thumb:hover { background-color: rgb(82 82 82); }
+
+  /* Hide native number-input spinners so the custom +/- stepper is the only control. */
+  .no-spinner[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+  .no-spinner[type="number"]::-webkit-outer-spin-button,
+  .no-spinner[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+`;
+
+// Wraps a whole screen so it fades/slides in on mount. Each of the three
+// top-level screens (setup, WeeklyCollection, ResolutionLog) is a separate
+// React return, so this always remounts on navigation and the animation
+// replays every time — no key management needed.
+function ScreenTransition({ children }) {
+  return (
+    <div style={{ animation: "screenIn 220ms ease-out both" }}>
+      <style>{SCREEN_ANIM_CSS}</style>
+      {children}
+    </div>
+  );
+}
 
 function Field({ label, children }) {
   return (
@@ -39,16 +88,27 @@ function ToolCard({ icon: Icon, title, description, disabled, onClick }) {
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className="w-full text-left bg-white dark:bg-neutral-950 rounded-xl border border-stone-200 dark:border-neutral-800 shadow-sm p-5 flex items-center gap-4 hover:border-emerald-600 dark:hover:border-emerald-500 hover:shadow-md transition-all disabled:opacity-40 disabled:hover:border-stone-200 dark:disabled:hover:border-neutral-800 disabled:hover:shadow-sm disabled:cursor-not-allowed"
+      className="w-full text-left bg-white dark:bg-neutral-950 rounded-xl border border-stone-200 dark:border-neutral-800 shadow-sm p-5 flex items-center gap-4 hover:border-emerald-600 dark:hover:border-emerald-500 hover:shadow-md transition-all disabled:hover:border-stone-200 dark:disabled:hover:border-neutral-800 disabled:hover:shadow-sm disabled:cursor-not-allowed"
     >
-      <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-emerald-600 to-emerald-800 dark:from-emerald-500 dark:to-emerald-700 text-white flex items-center justify-center shrink-0 shadow-inner shadow-emerald-900/40 dark:shadow-black/40 ring-1 ring-inset ring-white/10">
+      <div
+        className={
+          "w-11 h-11 rounded-lg flex items-center justify-center shrink-0 transition-colors " +
+          (disabled
+            ? "bg-stone-100 dark:bg-neutral-900 text-stone-300 dark:text-neutral-700"
+            : "bg-gradient-to-br from-emerald-600 to-emerald-800 dark:from-emerald-500 dark:to-emerald-700 text-white shadow-inner shadow-emerald-900/40 dark:shadow-black/40 ring-1 ring-inset ring-white/10")
+        }
+      >
         <Icon className="w-5 h-5" />
       </div>
       <div className="flex-1">
-        <div className="font-semibold text-stone-900 dark:text-stone-100 text-sm">{title}</div>
-        <div className="text-xs text-stone-500 dark:text-neutral-400 mt-0.5">{description}</div>
+        <div className={"font-semibold text-sm " + (disabled ? "text-stone-400 dark:text-neutral-600" : "text-stone-900 dark:text-stone-100")}>{title}</div>
+        <div className={"text-xs mt-0.5 " + (disabled ? "text-stone-400 dark:text-neutral-700" : "text-stone-500 dark:text-neutral-400")}>{description}</div>
       </div>
-      <ChevronRight className="w-4 h-4 text-stone-400 dark:text-neutral-600 shrink-0" />
+      {disabled ? (
+        <Lock className="w-4 h-4 text-stone-300 dark:text-neutral-700 shrink-0" />
+      ) : (
+        <ChevronRight className="w-4 h-4 text-stone-400 dark:text-neutral-600 shrink-0" />
+      )}
     </button>
   );
 }
@@ -127,23 +187,23 @@ export default function App() {
   }
 
   if (tool === "collection") {
-    return <WeeklyCollection shgName={shgName} members={members} onBackHome={() => setTool(null)} />;
+    return (
+      <ScreenTransition>
+        <WeeklyCollection shgName={shgName} members={members} onBackHome={() => setTool(null)} />
+      </ScreenTransition>
+    );
   }
   if (tool === "resolution") {
-    return <ResolutionLog shgName={shgName} members={members} onBackHome={() => setTool(null)} />;
+    return (
+      <ScreenTransition>
+        <ResolutionLog shgName={shgName} members={members} onBackHome={() => setTool(null)} />
+      </ScreenTransition>
+    );
   }
 
   return (
+    <ScreenTransition>
     <div className="min-h-screen bg-stone-100 dark:bg-black text-stone-900 dark:text-stone-100 font-sans">
-      <style>{`
-        @keyframes suggestIn {
-          from { opacity: 0; transform: scaleY(0.96) translateY(-2px); }
-          to { opacity: 1; transform: scaleY(1) translateY(0); }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          @keyframes suggestIn { from, to { opacity: 1; transform: none; } }
-        }
-      `}</style>
       <div className="max-w-xl mx-auto px-4 py-10 sm:py-14">
         <div className="mb-8 flex items-start justify-between gap-4">
           <div>
@@ -187,7 +247,7 @@ export default function App() {
                 <div className="px-3 py-1.5 text-[11px] font-medium text-stone-400 dark:text-neutral-500 border-b border-stone-100 dark:border-neutral-800 bg-stone-50/60 dark:bg-neutral-950/40">
                   {allMatchCount} {allMatchCount === 1 ? "match" : "matches"}{allMatchCount > suggestions.length ? ` · showing top ${suggestions.length}` : ""}
                 </div>
-                <div className="max-h-56 overflow-y-auto">
+                <div className="max-h-56 overflow-y-auto slim-scroll">
                   {suggestions.map((g, i) => (
                     <button
                       key={i}
@@ -279,7 +339,7 @@ export default function App() {
                     <span className="block text-xs font-semibold uppercase tracking-wide text-stone-500 dark:text-neutral-400 mb-1.5">
                       Select {step.label}
                     </span>
-                    <div className="max-h-56 overflow-y-auto space-y-1 pr-1">
+                    <div className="max-h-56 overflow-y-auto slim-scroll space-y-1 pr-1">
                       {step.options.map((opt) => (
                         <button
                           key={opt}
@@ -302,7 +362,7 @@ export default function App() {
                     <span className="block text-xs font-semibold uppercase tracking-wide text-stone-500 dark:text-neutral-400 mb-1.5">
                       {groups.length} SHGs in {selVillage}
                     </span>
-                    <div className="max-h-56 overflow-y-auto space-y-1 pr-1">
+                    <div className="max-h-56 overflow-y-auto slim-scroll space-y-1 pr-1">
                       {groups.map(([name, count], i) => (
                         <button
                           key={i}
@@ -328,14 +388,34 @@ export default function App() {
           <div className="mt-6 pt-5 border-t border-stone-100 dark:border-neutral-900 space-y-5">
             <span className="block text-[11px] font-semibold uppercase tracking-widest text-emerald-700/80 dark:text-emerald-500/80">Group size</span>
             <Field label="Number of Members">
-              <input
-                type="number"
-                min={1}
-                max={30}
-                className={inputClass}
-                value={numMembers}
-                onChange={(e) => { setNumMembers(Math.max(1, Number(e.target.value) || 1)); setSelectedPath(""); }}
-              />
+              <div className="flex items-stretch rounded-md border border-stone-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 overflow-hidden focus-within:ring-2 focus-within:ring-emerald-600 dark:focus-within:ring-emerald-500 focus-within:border-emerald-600 dark:focus-within:border-emerald-500">
+                <button
+                  type="button"
+                  aria-label="Decrease member count"
+                  disabled={numMembers <= 1}
+                  onClick={() => { setNumMembers((n) => Math.max(1, n - 1)); setSelectedPath(""); }}
+                  className="px-3.5 text-stone-500 dark:text-neutral-400 hover:bg-stone-50 dark:hover:bg-neutral-900 border-r border-stone-200 dark:border-neutral-800 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                >
+                  <Minus className="w-3.5 h-3.5" />
+                </button>
+                <input
+                  type="number"
+                  min={1}
+                  max={30}
+                  className="no-spinner w-full text-center bg-transparent px-2 py-2 text-sm text-stone-900 dark:text-stone-100 focus:outline-none"
+                  value={numMembers}
+                  onChange={(e) => { setNumMembers(Math.max(1, Number(e.target.value) || 1)); setSelectedPath(""); }}
+                />
+                <button
+                  type="button"
+                  aria-label="Increase member count"
+                  disabled={numMembers >= 30}
+                  onClick={() => { setNumMembers((n) => Math.min(30, n + 1)); setSelectedPath(""); }}
+                  className="px-3.5 text-stone-500 dark:text-neutral-400 hover:bg-stone-50 dark:hover:bg-neutral-900 border-l border-stone-200 dark:border-neutral-800 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </Field>
 
             <div>
@@ -343,7 +423,7 @@ export default function App() {
                 {showNames ? "Hide member names" : "Add member names (optional)"}
               </button>
               {showNames && (
-                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto slim-scroll pr-1">
                   {Array.from({ length: numMembers }).map((_, i) => (
                     <input
                       key={i}
@@ -379,5 +459,6 @@ export default function App() {
         {!ready && <p className="text-xs text-stone-400 dark:text-neutral-600 mt-3 text-center">Enter the SHG name and member count to continue.</p>}
       </div>
     </div>
+    </ScreenTransition>
   );
 }
