@@ -9,14 +9,27 @@ import { SHG_DIRECTORY, flattenDirectory } from "./lib/shgDirectory.js";
 const inputClass =
   "w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 dark:border-neutral-700 dark:bg-neutral-950 dark:text-stone-100 dark:focus:ring-emerald-500 dark:focus:border-emerald-500 dark:placeholder:text-neutral-600";
 
-const selectClass = inputClass + " disabled:opacity-40 disabled:cursor-not-allowed";
-
 function Field({ label, children }) {
   return (
     <label className="block">
       <span className="block text-xs font-semibold uppercase tracking-wide text-stone-500 dark:text-neutral-400 mb-1.5">{label}</span>
       {children}
     </label>
+  );
+}
+
+// Wraps the substring of `text` that matches `query` in an emphasized span.
+// Case-insensitive, first match only (matches the `.includes()` filter above).
+function highlightMatch(text, query) {
+  if (!query) return text;
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return text;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <span className="text-emerald-700 dark:text-emerald-400 font-semibold">{text.slice(idx, idx + query.length)}</span>
+      {text.slice(idx + query.length)}
+    </>
   );
 }
 
@@ -28,7 +41,7 @@ function ToolCard({ icon: Icon, title, description, disabled, onClick }) {
       onClick={onClick}
       className="w-full text-left bg-white dark:bg-neutral-950 rounded-xl border border-stone-200 dark:border-neutral-800 shadow-sm p-5 flex items-center gap-4 hover:border-emerald-600 dark:hover:border-emerald-500 hover:shadow-md transition-all disabled:opacity-40 disabled:hover:border-stone-200 dark:disabled:hover:border-neutral-800 disabled:hover:shadow-sm disabled:cursor-not-allowed"
     >
-      <div className="w-11 h-11 rounded-lg bg-emerald-700 dark:bg-emerald-600 text-white flex items-center justify-center shrink-0">
+      <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-emerald-600 to-emerald-800 dark:from-emerald-500 dark:to-emerald-700 text-white flex items-center justify-center shrink-0 shadow-inner shadow-emerald-900/40 dark:shadow-black/40 ring-1 ring-inset ring-white/10">
         <Icon className="w-5 h-5" />
       </div>
       <div className="flex-1">
@@ -53,11 +66,13 @@ export default function App() {
 
   // --- search-as-you-type autocomplete on the name field ---
   const [suggestOpen, setSuggestOpen] = useState(false);
-  const suggestions = useMemo(() => {
+  const allMatches = useMemo(() => {
     const q = shgName.trim().toLowerCase();
     if (!q) return [];
-    return FLAT_SHG_LIST.filter((g) => g.name.toLowerCase().includes(q)).slice(0, 8);
+    return FLAT_SHG_LIST.filter((g) => g.name.toLowerCase().includes(q));
   }, [shgName]);
+  const allMatchCount = allMatches.length;
+  const suggestions = useMemo(() => allMatches.slice(0, 8), [allMatches]);
 
   function pickGroup(group) {
     setShgName(group.name);
@@ -83,6 +98,21 @@ export default function App() {
   const villages = selGP ? Object.keys(SHG_DIRECTORY[selState][selDistrict][selBlock][selGP]) : [];
   const groups = selVillage ? SHG_DIRECTORY[selState][selDistrict][selBlock][selGP][selVillage] : [];
 
+  // Ordered step definitions for the guided location browser below.
+  const LOCATION_STEPS = [
+    { label: "State", value: selState, options: states, onSelect: (v) => { setSelState(v); setSelDistrict(""); setSelBlock(""); setSelGP(""); setSelVillage(""); } },
+    { label: "District", value: selDistrict, options: districts, onSelect: (v) => { setSelDistrict(v); setSelBlock(""); setSelGP(""); setSelVillage(""); } },
+    { label: "Block", value: selBlock, options: blocks, onSelect: (v) => { setSelBlock(v); setSelGP(""); setSelVillage(""); } },
+    { label: "Grampanchayat", value: selGP, options: gps, onSelect: (v) => { setSelGP(v); setSelVillage(""); } },
+    { label: "Village", value: selVillage, options: villages, onSelect: (v) => setSelVillage(v) },
+  ];
+  const LEVEL_SETTERS = [setSelState, setSelDistrict, setSelBlock, setSelGP, setSelVillage];
+  const firstUnsetIndex = LOCATION_STEPS.findIndex((s) => !s.value);
+  const activeStepIndex = firstUnsetIndex === -1 ? LOCATION_STEPS.length : firstUnsetIndex;
+  function resetFrom(i) {
+    for (let j = i; j < LEVEL_SETTERS.length; j++) LEVEL_SETTERS[j]("");
+  }
+
   const members = useMemo(
     () => Array.from({ length: numMembers }, (_, i) => memberNames[i]?.trim() || `Member ${i + 1}`),
     [numMembers, memberNames]
@@ -105,6 +135,15 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-stone-100 dark:bg-black text-stone-900 dark:text-stone-100 font-sans">
+      <style>{`
+        @keyframes suggestIn {
+          from { opacity: 0; transform: scaleY(0.96) translateY(-2px); }
+          to { opacity: 1; transform: scaleY(1) translateY(0); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          @keyframes suggestIn { from, to { opacity: 1; transform: none; } }
+        }
+      `}</style>
       <div className="max-w-xl mx-auto px-4 py-10 sm:py-14">
         <div className="mb-8 flex items-start justify-between gap-4">
           <div>
@@ -117,7 +156,9 @@ export default function App() {
           <ThemeToggle theme={theme} onToggle={toggleTheme} />
         </div>
 
-        <div className="bg-white dark:bg-neutral-950 rounded-xl border border-stone-200 dark:border-neutral-800 shadow-sm p-5 sm:p-6 space-y-5 mb-6">
+        <div className="bg-white dark:bg-neutral-950 rounded-xl border border-stone-200 dark:border-neutral-800 shadow-sm p-5 sm:p-6 mb-6">
+          <div className="space-y-5">
+            <span className="block text-[11px] font-semibold uppercase tracking-widest text-emerald-700/80 dark:text-emerald-500/80">Identify the group</span>
           <div className="relative">
             <Field label="SHG Name">
               <div className="relative">
@@ -138,18 +179,29 @@ export default function App() {
             </Field>
 
             {suggestOpen && suggestions.length > 0 && (
-              <div className="absolute z-10 mt-1 w-full bg-white dark:bg-neutral-900 border border-stone-200 dark:border-neutral-700 rounded-md shadow-lg max-h-56 overflow-y-auto">
-                {suggestions.map((g, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onMouseDown={() => pickGroup(g)}
-                    className="w-full text-left px-3 py-2 hover:bg-stone-50 dark:hover:bg-neutral-800 border-b border-stone-100 dark:border-neutral-800 last:border-0"
-                  >
-                    <div className="text-sm font-medium text-stone-900 dark:text-stone-100">{g.name} <span className="text-stone-400 dark:text-neutral-500 font-normal">({g.members} members)</span></div>
-                    <div className="text-[11px] text-stone-500 dark:text-neutral-500">{g.path}</div>
-                  </button>
-                ))}
+              <div
+                key={shgName.trim().toLowerCase() ? "open" : "closed"}
+                className="absolute z-10 mt-1 w-full bg-white dark:bg-neutral-900 border border-stone-200 dark:border-neutral-700 rounded-md shadow-lg max-h-64 overflow-hidden origin-top"
+                style={{ animation: "suggestIn 120ms ease-out" }}
+              >
+                <div className="px-3 py-1.5 text-[11px] font-medium text-stone-400 dark:text-neutral-500 border-b border-stone-100 dark:border-neutral-800 bg-stone-50/60 dark:bg-neutral-950/40">
+                  {allMatchCount} {allMatchCount === 1 ? "match" : "matches"}{allMatchCount > suggestions.length ? ` · showing top ${suggestions.length}` : ""}
+                </div>
+                <div className="max-h-56 overflow-y-auto">
+                  {suggestions.map((g, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onMouseDown={() => pickGroup(g)}
+                      className="w-full text-left px-3 py-2 hover:bg-stone-50 dark:hover:bg-neutral-800 border-b border-stone-100 dark:border-neutral-800 last:border-0"
+                    >
+                      <div className="text-sm font-medium text-stone-900 dark:text-stone-100">
+                        {highlightMatch(g.name, shgName.trim())} <span className="text-stone-400 dark:text-neutral-500 font-normal">({g.members} members)</span>
+                      </div>
+                      <div className="text-[11px] text-stone-500 dark:text-neutral-500">{g.path}</div>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -176,98 +228,134 @@ export default function App() {
                   <X className="w-4 h-4" />
                 </button>
               </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <Field label="State">
-                  <select className={selectClass} value={selState} onChange={(e) => { setSelState(e.target.value); setSelDistrict(""); setSelBlock(""); setSelGP(""); setSelVillage(""); }}>
-                    <option value="">Select...</option>
-                    {states.map((s) => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </Field>
-                <Field label="District">
-                  <select className={selectClass} disabled={!selState} value={selDistrict} onChange={(e) => { setSelDistrict(e.target.value); setSelBlock(""); setSelGP(""); setSelVillage(""); }}>
-                    <option value="">Select...</option>
-                    {districts.map((d) => <option key={d} value={d}>{d}</option>)}
-                  </select>
-                </Field>
-                <Field label="Block">
-                  <select className={selectClass} disabled={!selDistrict} value={selBlock} onChange={(e) => { setSelBlock(e.target.value); setSelGP(""); setSelVillage(""); }}>
-                    <option value="">Select...</option>
-                    {blocks.map((b) => <option key={b} value={b}>{b}</option>)}
-                  </select>
-                </Field>
-                <Field label="Grampanchayat">
-                  <select className={selectClass} disabled={!selBlock} value={selGP} onChange={(e) => { setSelGP(e.target.value); setSelVillage(""); }}>
-                    <option value="">Select...</option>
-                    {gps.map((g) => <option key={g} value={g}>{g}</option>)}
-                  </select>
-                </Field>
-                <Field label="Village">
-                  <select className={selectClass} disabled={!selGP} value={selVillage} onChange={(e) => setSelVillage(e.target.value)}>
-                    <option value="">Select...</option>
-                    {villages.map((v) => <option key={v} value={v}>{v}</option>)}
-                  </select>
-                </Field>
+              {/* Progress stepper: one segment per level, filled as you go */}
+              <div className="flex items-center gap-1.5">
+                {LOCATION_STEPS.map((step, i) => (
+                  <div
+                    key={step.label}
+                    className={
+                      "h-1.5 flex-1 rounded-full transition-colors duration-300 " +
+                      (i < activeStepIndex
+                        ? "bg-emerald-600 dark:bg-emerald-500"
+                        : i === activeStepIndex
+                        ? "bg-emerald-300 dark:bg-emerald-800"
+                        : "bg-stone-200 dark:bg-neutral-800")
+                    }
+                    title={step.label}
+                  />
+                ))}
               </div>
 
-              {selBlock && gps.length === 0 && (
-                <p className="text-xs text-stone-500 dark:text-neutral-500">No Grampanchayat data for {selBlock} yet — type the SHG name manually instead.</p>
-              )}
-              {selGP && villages.length === 0 && (
-                <p className="text-xs text-stone-500 dark:text-neutral-500">No village data for {selGP} yet — type the SHG name manually instead.</p>
+              {/* Breadcrumb of confirmed selections — tap one to jump back and re-pick from there */}
+              {activeStepIndex > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {LOCATION_STEPS.slice(0, activeStepIndex).map((step, i) => (
+                    <button
+                      key={step.label}
+                      type="button"
+                      onClick={() => resetFrom(i)}
+                      className="inline-flex items-center gap-1 text-xs font-medium bg-white dark:bg-neutral-950 border border-stone-300 dark:border-neutral-700 text-stone-700 dark:text-stone-300 rounded-full pl-2.5 pr-1.5 py-1 hover:border-emerald-600 dark:hover:border-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400"
+                    >
+                      {step.value}
+                      <X className="w-3 h-3 text-stone-400 dark:text-neutral-500" />
+                    </button>
+                  ))}
+                </div>
               )}
 
-              {selVillage && groups.length > 0 && (
-                <div>
-                  <span className="block text-xs font-semibold uppercase tracking-wide text-stone-500 dark:text-neutral-400 mb-1.5">
-                    {groups.length} SHGs in {selVillage}
-                  </span>
-                  <div className="max-h-56 overflow-y-auto space-y-1 pr-1">
-                    {groups.map(([name, count], i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => pickGroup({ name, members: count, path: `${selState}, ${selDistrict}, ${selBlock}, ${selGP}, ${selVillage}` })}
-                        className="w-full text-left px-3 py-2 rounded-md bg-white dark:bg-neutral-950 border border-stone-200 dark:border-neutral-800 hover:border-emerald-600 dark:hover:border-emerald-500 text-sm flex items-center justify-between"
-                      >
-                        <span className="text-stone-800 dark:text-stone-200">{name}</span>
-                        <span className="text-stone-400 dark:text-neutral-500 text-xs">{count} members</span>
-                      </button>
-                    ))}
+              {/* Active step: tappable list of options for the next level */}
+              {activeStepIndex < LOCATION_STEPS.length && (() => {
+                const step = LOCATION_STEPS[activeStepIndex];
+                if (step.options.length === 0) {
+                  const prevLabel = LOCATION_STEPS[activeStepIndex - 1]?.value ?? "this selection";
+                  return (
+                    <p className="text-xs text-stone-500 dark:text-neutral-500">
+                      No {step.label.toLowerCase()} data for {prevLabel} yet — type the SHG name manually instead.
+                    </p>
+                  );
+                }
+                return (
+                  <div key={step.label} style={{ animation: "suggestIn 140ms ease-out" }}>
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-stone-500 dark:text-neutral-400 mb-1.5">
+                      Select {step.label}
+                    </span>
+                    <div className="max-h-56 overflow-y-auto space-y-1 pr-1">
+                      {step.options.map((opt) => (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => step.onSelect(opt)}
+                          className="w-full text-left px-3 py-2 rounded-md bg-white dark:bg-neutral-950 border border-stone-200 dark:border-neutral-800 hover:border-emerald-600 dark:hover:border-emerald-500 text-sm text-stone-800 dark:text-stone-200"
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                );
+              })()}
+
+              {/* All five levels picked — show the SHGs at that village */}
+              {activeStepIndex === LOCATION_STEPS.length && (
+                groups.length > 0 ? (
+                  <div>
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-stone-500 dark:text-neutral-400 mb-1.5">
+                      {groups.length} SHGs in {selVillage}
+                    </span>
+                    <div className="max-h-56 overflow-y-auto space-y-1 pr-1">
+                      {groups.map(([name, count], i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => pickGroup({ name, members: count, path: `${selState}, ${selDistrict}, ${selBlock}, ${selGP}, ${selVillage}` })}
+                          className="w-full text-left px-3 py-2 rounded-md bg-white dark:bg-neutral-950 border border-stone-200 dark:border-neutral-800 hover:border-emerald-600 dark:hover:border-emerald-500 text-sm flex items-center justify-between"
+                        >
+                          <span className="text-stone-800 dark:text-stone-200">{name}</span>
+                          <span className="text-stone-400 dark:text-neutral-500 text-xs">{count} members</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-stone-500 dark:text-neutral-500">No SHGs listed for {selVillage} yet — type the SHG name manually instead.</p>
+                )
               )}
             </div>
           )}
 
-          <Field label="Number of Members">
-            <input
-              type="number"
-              min={1}
-              max={30}
-              className={inputClass}
-              value={numMembers}
-              onChange={(e) => { setNumMembers(Math.max(1, Number(e.target.value) || 1)); setSelectedPath(""); }}
-            />
-          </Field>
+          </div>
 
-          <div>
-            <button type="button" onClick={() => setShowNames((v) => !v)} className="text-sm text-emerald-700 dark:text-emerald-400 font-medium hover:text-emerald-800 dark:hover:text-emerald-300">
-              {showNames ? "Hide member names" : "Add member names (optional)"}
-            </button>
-            {showNames && (
-              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
-                {Array.from({ length: numMembers }).map((_, i) => (
-                  <input
-                    key={i}
-                    className={inputClass}
-                    placeholder={`Member ${i + 1}`}
-                    value={memberNames[i] || ""}
-                    onChange={(e) => updateMemberName(i, e.target.value)}
-                  />
-                ))}
-              </div>
-            )}
+          <div className="mt-6 pt-5 border-t border-stone-100 dark:border-neutral-900 space-y-5">
+            <span className="block text-[11px] font-semibold uppercase tracking-widest text-emerald-700/80 dark:text-emerald-500/80">Group size</span>
+            <Field label="Number of Members">
+              <input
+                type="number"
+                min={1}
+                max={30}
+                className={inputClass}
+                value={numMembers}
+                onChange={(e) => { setNumMembers(Math.max(1, Number(e.target.value) || 1)); setSelectedPath(""); }}
+              />
+            </Field>
+
+            <div>
+              <button type="button" onClick={() => setShowNames((v) => !v)} className="text-sm text-emerald-700 dark:text-emerald-400 font-medium hover:text-emerald-800 dark:hover:text-emerald-300">
+                {showNames ? "Hide member names" : "Add member names (optional)"}
+              </button>
+              {showNames && (
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
+                  {Array.from({ length: numMembers }).map((_, i) => (
+                    <input
+                      key={i}
+                      className={inputClass}
+                      placeholder={`Member ${i + 1}`}
+                      value={memberNames[i] || ""}
+                      onChange={(e) => updateMemberName(i, e.target.value)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
