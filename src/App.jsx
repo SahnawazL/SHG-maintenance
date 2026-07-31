@@ -1,13 +1,21 @@
 import { useMemo, useState } from "react";
-import { Wallet, FileText, ChevronRight, Search, MapPin, X, Plus, Minus, Lock } from "lucide-react";
+import { Wallet, FileText, ChevronRight, Search, MapPin, X, Plus, Minus, Lock, CreditCard } from "lucide-react";
 import WeeklyCollection from "./tools/WeeklyCollection.jsx";
 import ResolutionLog from "./tools/ResolutionLog.jsx";
+import GroupIDCard from "./tools/GroupIDCard.jsx";
 import ThemeToggle from "./components/ThemeToggle.jsx";
 import { useTheme } from "./lib/theme.js";
 import { SHG_DIRECTORY, flattenDirectory } from "./lib/shgDirectory.js";
 
 const inputClass =
   "w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 dark:border-neutral-700 dark:bg-neutral-950 dark:text-stone-100 dark:focus:ring-emerald-500 dark:focus:border-emerald-500 dark:placeholder:text-neutral-600";
+
+// Shared keyboard-focus ring for buttons and other non-text-input controls
+// (text inputs already get their own ring via inputClass). Inset so it
+// renders correctly regardless of what background/overflow container the
+// element sits in, and only shows for keyboard focus (not mouse clicks).
+const focusRingClass =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-600 dark:focus-visible:ring-emerald-500";
 
 // Shared keyframes for the autocomplete/option-list pop-in (suggestIn) and the
 // full-screen transition between setup / WeeklyCollection / ResolutionLog
@@ -88,7 +96,7 @@ function ToolCard({ icon: Icon, title, description, disabled, onClick }) {
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className="w-full text-left bg-white dark:bg-neutral-950 rounded-xl border border-stone-200 dark:border-neutral-800 shadow-sm p-5 flex items-center gap-4 hover:border-emerald-600 dark:hover:border-emerald-500 hover:shadow-md transition-all disabled:hover:border-stone-200 dark:disabled:hover:border-neutral-800 disabled:hover:shadow-sm disabled:cursor-not-allowed"
+      className={"w-full text-left bg-white dark:bg-neutral-950 rounded-xl border border-stone-200 dark:border-neutral-800 shadow-sm p-5 flex items-center gap-4 hover:border-emerald-600 dark:hover:border-emerald-500 hover:shadow-md transition-all disabled:hover:border-stone-200 dark:disabled:hover:border-neutral-800 disabled:hover:shadow-sm disabled:cursor-not-allowed " + focusRingClass}
     >
       <div
         className={
@@ -126,6 +134,7 @@ export default function App() {
 
   // --- search-as-you-type autocomplete on the name field ---
   const [suggestOpen, setSuggestOpen] = useState(false);
+  const [activeSuggestIndex, setActiveSuggestIndex] = useState(-1);
   const allMatches = useMemo(() => {
     const q = shgName.trim().toLowerCase();
     if (!q) return [];
@@ -140,7 +149,28 @@ export default function App() {
     setMemberNames([]);
     setSelectedPath(group.path);
     setSuggestOpen(false);
+    setActiveSuggestIndex(-1);
     setShowBrowse(false);
+  }
+
+  // Arrow-key/Enter/Escape navigation for the autocomplete listbox.
+  function handleNameKeyDown(e) {
+    if (!suggestOpen || suggestions.length === 0) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveSuggestIndex((i) => Math.min(suggestions.length - 1, i + 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveSuggestIndex((i) => Math.max(0, i - 1));
+    } else if (e.key === "Enter") {
+      if (activeSuggestIndex >= 0 && activeSuggestIndex < suggestions.length) {
+        e.preventDefault();
+        pickGroup(suggestions[activeSuggestIndex]);
+      }
+    } else if (e.key === "Escape") {
+      setSuggestOpen(false);
+      setActiveSuggestIndex(-1);
+    }
   }
 
   // --- step-by-step location filter ---
@@ -200,6 +230,13 @@ export default function App() {
       </ScreenTransition>
     );
   }
+  if (tool === "idcard") {
+    return (
+      <ScreenTransition>
+        <GroupIDCard shgName={shgName} members={members} location={selectedPath} onBackHome={() => setTool(null)} />
+      </ScreenTransition>
+    );
+  }
 
   return (
     <ScreenTransition>
@@ -226,13 +263,20 @@ export default function App() {
                   className={inputClass + " pl-8"}
                   placeholder="Type to search, e.g. KUSHI"
                   value={shgName}
+                  role="combobox"
+                  aria-expanded={suggestOpen && suggestions.length > 0}
+                  aria-controls="shg-suggest-listbox"
+                  aria-autocomplete="list"
+                  aria-activedescendant={activeSuggestIndex >= 0 ? `shg-suggest-option-${activeSuggestIndex}` : undefined}
                   onChange={(e) => {
                     setShgName(e.target.value);
                     setSelectedPath("");
                     setSuggestOpen(true);
+                    setActiveSuggestIndex(-1);
                   }}
                   onFocus={() => setSuggestOpen(true)}
-                  onBlur={() => setTimeout(() => setSuggestOpen(false), 150)}
+                  onBlur={() => setTimeout(() => { setSuggestOpen(false); setActiveSuggestIndex(-1); }, 150)}
+                  onKeyDown={handleNameKeyDown}
                 />
                 <Search className="w-4 h-4 text-stone-400 dark:text-neutral-600 absolute left-2.5 top-1/2 -translate-y-1/2" />
               </div>
@@ -247,13 +291,21 @@ export default function App() {
                 <div className="px-3 py-1.5 text-[11px] font-medium text-stone-400 dark:text-neutral-500 border-b border-stone-100 dark:border-neutral-800 bg-stone-50/60 dark:bg-neutral-950/40">
                   {allMatchCount} {allMatchCount === 1 ? "match" : "matches"}{allMatchCount > suggestions.length ? ` · showing top ${suggestions.length}` : ""}
                 </div>
-                <div className="max-h-56 overflow-y-auto slim-scroll">
+                <div id="shg-suggest-listbox" role="listbox" className="max-h-56 overflow-y-auto slim-scroll">
                   {suggestions.map((g, i) => (
                     <button
                       key={i}
+                      id={`shg-suggest-option-${i}`}
+                      role="option"
+                      aria-selected={i === activeSuggestIndex}
+                      tabIndex={-1}
                       type="button"
                       onMouseDown={() => pickGroup(g)}
-                      className="w-full text-left px-3 py-2 hover:bg-stone-50 dark:hover:bg-neutral-800 border-b border-stone-100 dark:border-neutral-800 last:border-0"
+                      onMouseEnter={() => setActiveSuggestIndex(i)}
+                      className={
+                        "w-full text-left px-3 py-2 border-b border-stone-100 dark:border-neutral-800 last:border-0 " +
+                        (i === activeSuggestIndex ? "bg-stone-50 dark:bg-neutral-800" : "hover:bg-stone-50 dark:hover:bg-neutral-800")
+                      }
                     >
                       <div className="text-sm font-medium text-stone-900 dark:text-stone-100">
                         {highlightMatch(g.name, shgName.trim())} <span className="text-stone-400 dark:text-neutral-500 font-normal">({g.members} members)</span>
@@ -275,7 +327,7 @@ export default function App() {
           <button
             type="button"
             onClick={() => setShowBrowse((v) => !v)}
-            className="text-sm text-emerald-700 dark:text-emerald-400 font-medium hover:text-emerald-800 dark:hover:text-emerald-300 inline-flex items-center gap-1"
+            className={"text-sm text-emerald-700 dark:text-emerald-400 font-medium hover:text-emerald-800 dark:hover:text-emerald-300 inline-flex items-center gap-1 rounded-md " + focusRingClass}
           >
             <MapPin className="w-3.5 h-3.5" /> {showBrowse ? "Hide location filter" : "Or find it step-by-step by location"}
           </button>
@@ -284,7 +336,7 @@ export default function App() {
             <div className="rounded-lg border border-stone-200 dark:border-neutral-800 bg-stone-50 dark:bg-neutral-900 p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold uppercase tracking-wide text-stone-500 dark:text-neutral-400">Browse by location</span>
-                <button type="button" onClick={() => setShowBrowse(false)} className="text-stone-400 dark:text-neutral-500 hover:text-stone-600 dark:hover:text-neutral-300">
+                <button type="button" onClick={() => setShowBrowse(false)} aria-label="Close location browser" className={"text-stone-400 dark:text-neutral-500 hover:text-stone-600 dark:hover:text-neutral-300 rounded " + focusRingClass}>
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -314,7 +366,7 @@ export default function App() {
                       key={step.label}
                       type="button"
                       onClick={() => resetFrom(i)}
-                      className="inline-flex items-center gap-1 text-xs font-medium bg-white dark:bg-neutral-950 border border-stone-300 dark:border-neutral-700 text-stone-700 dark:text-stone-300 rounded-full pl-2.5 pr-1.5 py-1 hover:border-emerald-600 dark:hover:border-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400"
+                      className={"inline-flex items-center gap-1 text-xs font-medium bg-white dark:bg-neutral-950 border border-stone-300 dark:border-neutral-700 text-stone-700 dark:text-stone-300 rounded-full pl-2.5 pr-1.5 py-1 hover:border-emerald-600 dark:hover:border-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400 " + focusRingClass}
                     >
                       {step.value}
                       <X className="w-3 h-3 text-stone-400 dark:text-neutral-500" />
@@ -345,7 +397,7 @@ export default function App() {
                           key={opt}
                           type="button"
                           onClick={() => step.onSelect(opt)}
-                          className="w-full text-left px-3 py-2 rounded-md bg-white dark:bg-neutral-950 border border-stone-200 dark:border-neutral-800 hover:border-emerald-600 dark:hover:border-emerald-500 text-sm text-stone-800 dark:text-stone-200"
+                          className={"w-full text-left px-3 py-2 rounded-md bg-white dark:bg-neutral-950 border border-stone-200 dark:border-neutral-800 hover:border-emerald-600 dark:hover:border-emerald-500 text-sm text-stone-800 dark:text-stone-200 " + focusRingClass}
                         >
                           {opt}
                         </button>
@@ -368,7 +420,7 @@ export default function App() {
                           key={i}
                           type="button"
                           onClick={() => pickGroup({ name, members: count, path: `${selState}, ${selDistrict}, ${selBlock}, ${selGP}, ${selVillage}` })}
-                          className="w-full text-left px-3 py-2 rounded-md bg-white dark:bg-neutral-950 border border-stone-200 dark:border-neutral-800 hover:border-emerald-600 dark:hover:border-emerald-500 text-sm flex items-center justify-between"
+                          className={"w-full text-left px-3 py-2 rounded-md bg-white dark:bg-neutral-950 border border-stone-200 dark:border-neutral-800 hover:border-emerald-600 dark:hover:border-emerald-500 text-sm flex items-center justify-between " + focusRingClass}
                         >
                           <span className="text-stone-800 dark:text-stone-200">{name}</span>
                           <span className="text-stone-400 dark:text-neutral-500 text-xs">{count} members</span>
@@ -394,7 +446,7 @@ export default function App() {
                   aria-label="Decrease member count"
                   disabled={numMembers <= 1}
                   onClick={() => { setNumMembers((n) => Math.max(1, n - 1)); setSelectedPath(""); }}
-                  className="px-3.5 text-stone-500 dark:text-neutral-400 hover:bg-stone-50 dark:hover:bg-neutral-900 border-r border-stone-200 dark:border-neutral-800 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                  className={"px-3.5 text-stone-500 dark:text-neutral-400 hover:bg-stone-50 dark:hover:bg-neutral-900 border-r border-stone-200 dark:border-neutral-800 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent " + focusRingClass}
                 >
                   <Minus className="w-3.5 h-3.5" />
                 </button>
@@ -404,14 +456,14 @@ export default function App() {
                   max={30}
                   className="no-spinner w-full text-center bg-transparent px-2 py-2 text-sm text-stone-900 dark:text-stone-100 focus:outline-none"
                   value={numMembers}
-                  onChange={(e) => { setNumMembers(Math.max(1, Number(e.target.value) || 1)); setSelectedPath(""); }}
+                  onChange={(e) => { setNumMembers(Math.min(30, Math.max(1, Number(e.target.value) || 1))); setSelectedPath(""); }}
                 />
                 <button
                   type="button"
                   aria-label="Increase member count"
                   disabled={numMembers >= 30}
                   onClick={() => { setNumMembers((n) => Math.min(30, n + 1)); setSelectedPath(""); }}
-                  className="px-3.5 text-stone-500 dark:text-neutral-400 hover:bg-stone-50 dark:hover:bg-neutral-900 border-l border-stone-200 dark:border-neutral-800 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                  className={"px-3.5 text-stone-500 dark:text-neutral-400 hover:bg-stone-50 dark:hover:bg-neutral-900 border-l border-stone-200 dark:border-neutral-800 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent " + focusRingClass}
                 >
                   <Plus className="w-3.5 h-3.5" />
                 </button>
@@ -419,7 +471,7 @@ export default function App() {
             </Field>
 
             <div>
-              <button type="button" onClick={() => setShowNames((v) => !v)} className="text-sm text-emerald-700 dark:text-emerald-400 font-medium hover:text-emerald-800 dark:hover:text-emerald-300">
+              <button type="button" onClick={() => setShowNames((v) => !v)} className={"text-sm text-emerald-700 dark:text-emerald-400 font-medium hover:text-emerald-800 dark:hover:text-emerald-300 rounded-md " + focusRingClass}>
                 {showNames ? "Hide member names" : "Add member names (optional)"}
               </button>
               {showNames && (
@@ -453,6 +505,13 @@ export default function App() {
             description="Auto-rotate meeting dates and the chairing member; you write the resolution"
             disabled={!ready}
             onClick={() => setTool("resolution")}
+          />
+          <ToolCard
+            icon={CreditCard}
+            title="Group ID Card"
+            description="A printable, official-style summary with the member roster and a QR reference"
+            disabled={!ready}
+            onClick={() => setTool("idcard")}
           />
         </div>
 
