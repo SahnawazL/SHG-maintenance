@@ -130,6 +130,7 @@ export default function App() {
   const [shgName, setShgName] = useState("");
   const [numMembers, setNumMembers] = useState(11);
   const [memberNames, setMemberNames] = useState([]);
+  const [memberIds, setMemberIds] = useState([]); // roster member IDs, positional — empty for manually-typed members
   const [showNames, setShowNames] = useState(false);
   const [selectedPath, setSelectedPath] = useState(""); // set when picked from directory
 
@@ -159,10 +160,12 @@ export default function App() {
     if (roster) {
       setNumMembers(roster.members.length);
       setMemberNames(roster.members.map((m) => m.name));
+      setMemberIds(roster.members.map((m) => m.memberId));
       setShowNames(true);
     } else {
       setNumMembers(group.members);
       setMemberNames([]);
+      setMemberIds([]);
     }
   }
 
@@ -229,10 +232,16 @@ export default function App() {
     setMemberNames(next);
   }
 
+  function updateMemberId(i, val) {
+    const next = [...memberIds];
+    next[i] = val;
+    setMemberIds(next);
+  }
+
   if (tool === "collection") {
     return (
       <ScreenTransition>
-        <WeeklyCollection shgName={shgName} members={members} onBackHome={() => setTool(null)} />
+        <WeeklyCollection shgName={shgName} members={members} memberIds={memberIds} onBackHome={() => setTool(null)} />
       </ScreenTransition>
     );
   }
@@ -246,7 +255,7 @@ export default function App() {
   if (tool === "idcard") {
     return (
       <ScreenTransition>
-        <GroupIDCard shgName={shgName} members={members} location={selectedPath} onBackHome={() => setTool(null)} />
+        <GroupIDCard shgName={shgName} members={members} memberIds={memberIds} location={selectedPath} onBackHome={() => setTool(null)} />
       </ScreenTransition>
     );
   }
@@ -488,16 +497,30 @@ export default function App() {
                 {showNames ? "Hide member names" : "Add member names (optional)"}
               </button>
               {showNames && (
-                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto slim-scroll pr-1">
-                  {Array.from({ length: numMembers }).map((_, i) => (
-                    <input
-                      key={i}
-                      className={inputClass}
-                      placeholder={`Member ${i + 1}`}
-                      value={memberNames[i] || ""}
-                      onChange={(e) => updateMemberName(i, e.target.value)}
-                    />
-                  ))}
+                <div className="mt-3">
+                  <div className="hidden sm:flex gap-2 px-0.5 mb-1">
+                    <span className="flex-1 text-[11px] font-semibold uppercase tracking-wide text-stone-400 dark:text-neutral-500">Name</span>
+                    <span className="w-32 shrink-0 text-[11px] font-semibold uppercase tracking-wide text-stone-400 dark:text-neutral-500">ID (optional)</span>
+                  </div>
+                  <div className="space-y-2 max-h-56 overflow-y-auto slim-scroll pr-1">
+                    {Array.from({ length: numMembers }).map((_, i) => (
+                      <div key={i} className="flex gap-2">
+                        <input
+                          className={inputClass + " flex-1"}
+                          placeholder={`Member ${i + 1}`}
+                          value={memberNames[i] || ""}
+                          onChange={(e) => updateMemberName(i, e.target.value)}
+                        />
+                        <input
+                          className={inputClass + " w-32 shrink-0 font-mono"}
+                          placeholder="ID"
+                          inputMode="numeric"
+                          value={memberIds[i] || ""}
+                          onChange={(e) => updateMemberId(i, e.target.value)}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
