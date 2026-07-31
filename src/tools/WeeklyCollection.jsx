@@ -5,6 +5,12 @@ import { WEEKDAYS, MONTHS, YEARS, formatDate, formatRupee, computeMeetingDates, 
 const inputClass =
   "w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 dark:border-neutral-700 dark:bg-neutral-950 dark:text-stone-100 dark:focus:ring-emerald-500 dark:focus:border-emerald-500 dark:placeholder:text-neutral-600";
 
+// Same keyboard-only focus ring used throughout App.jsx, applied here to the
+// buttons that don't already get one from inputClass (selects/inputs keep
+// their own focus:ring, unchanged).
+const focusRingClass =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-600 dark:focus-visible:ring-emerald-500";
+
 function Field({ label, children }) {
   return (
     <label className="block">
@@ -14,7 +20,7 @@ function Field({ label, children }) {
   );
 }
 
-export default function WeeklyCollection({ shgName, members, onBackHome }) {
+export default function WeeklyCollection({ shgName, members, memberIds = [], onBackHome }) {
   const [stage, setStage] = useState("setup");
   const [weekday, setWeekday] = useState(2);
   const [weeklyAmount, setWeeklyAmount] = useState(20);
@@ -44,7 +50,7 @@ export default function WeeklyCollection({ shgName, members, onBackHome }) {
     return (
       <div className="min-h-screen bg-stone-100 dark:bg-black">
         <div className="max-w-xl mx-auto px-4 py-8 sm:py-10">
-          <button type="button" onClick={onBackHome} className="inline-flex items-center gap-1.5 text-sm text-stone-600 dark:text-neutral-400 hover:text-stone-900 dark:hover:text-stone-100 mb-5">
+          <button type="button" onClick={onBackHome} className={"inline-flex items-center gap-1.5 text-sm text-stone-600 dark:text-neutral-400 hover:text-stone-900 dark:hover:text-stone-100 mb-5 rounded-md " + focusRingClass}>
             <ArrowLeft className="w-4 h-4" /> Back to tools
           </button>
 
@@ -100,7 +106,7 @@ export default function WeeklyCollection({ shgName, members, onBackHome }) {
               type="button"
               disabled={!canGenerate}
               onClick={handleGenerate}
-              className="w-full rounded-md bg-emerald-700 dark:bg-emerald-600 text-white font-semibold py-2.5 text-sm hover:bg-emerald-800 dark:hover:bg-emerald-500 disabled:bg-stone-300 dark:disabled:bg-neutral-800 disabled:cursor-not-allowed transition-colors"
+              className={"w-full rounded-md bg-emerald-700 dark:bg-emerald-600 text-white font-semibold py-2.5 text-sm hover:bg-emerald-800 dark:hover:bg-emerald-500 disabled:bg-stone-300 dark:disabled:bg-neutral-800 disabled:cursor-not-allowed transition-colors " + focusRingClass}
             >
               Generate Report
             </button>
@@ -116,7 +122,7 @@ export default function WeeklyCollection({ shgName, members, onBackHome }) {
   return (
     <div className="min-h-screen bg-stone-100 dark:bg-black">
       <div className="max-w-3xl mx-auto px-4 py-8 sm:py-10">
-        <button type="button" onClick={() => setStage("setup")} className="inline-flex items-center gap-1.5 text-sm text-stone-600 dark:text-neutral-400 hover:text-stone-900 dark:hover:text-stone-100 mb-4">
+        <button type="button" onClick={() => setStage("setup")} className={"inline-flex items-center gap-1.5 text-sm text-stone-600 dark:text-neutral-400 hover:text-stone-900 dark:hover:text-stone-100 mb-4 rounded-md " + focusRingClass}>
           <ArrowLeft className="w-4 h-4" /> Back to setup
         </button>
 
@@ -147,24 +153,29 @@ export default function WeeklyCollection({ shgName, members, onBackHome }) {
           </div>
 
           <div className="flex items-center gap-2 px-5 sm:px-7 py-3 bg-stone-50 dark:bg-neutral-900 border-b border-stone-200 dark:border-neutral-800">
-            <button type="button" onClick={() => setActiveMember((i) => Math.max(0, i - 1))} disabled={activeMember === 0} className="p-1.5 rounded-md border border-stone-300 dark:border-neutral-700 disabled:opacity-30 hover:bg-white dark:hover:bg-neutral-800">
+            <button type="button" onClick={() => setActiveMember((i) => Math.max(0, i - 1))} disabled={activeMember === 0} className={"p-1.5 rounded-md border border-stone-300 dark:border-neutral-700 disabled:opacity-30 hover:bg-white dark:hover:bg-neutral-800 " + focusRingClass}>
               <ChevronLeft className="w-4 h-4 dark:text-stone-300" />
             </button>
-            <div className="flex-1 text-center">
+            <div className="flex-1 min-w-0 text-center">
               <span className="text-xs text-stone-500 dark:text-neutral-400">Copy page for</span>
               <select
                 value={activeMember}
                 onChange={(e) => setActiveMember(Number(e.target.value))}
-                className="block mx-auto font-semibold text-stone-900 dark:text-stone-100 text-sm bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-emerald-600 dark:focus:ring-emerald-500 rounded-md cursor-pointer"
+                className="block mx-auto w-full max-w-full truncate font-semibold text-stone-900 dark:text-stone-100 text-sm bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-emerald-600 dark:focus:ring-emerald-500 rounded-md cursor-pointer px-1"
               >
                 {members.map((name, i) => (
                   <option key={i} value={i} className="text-stone-900 dark:text-stone-100">
-                    {name} ({i + 1} of {members.length})
+                    {name} ({i + 1} of {members.length}){memberIds[i] ? ` · ID ${memberIds[i].slice(-5)}` : ""}
                   </option>
                 ))}
               </select>
+              {memberIds[activeMember] && (
+                <div className="text-[11px] font-mono text-stone-400 dark:text-neutral-500 mt-0.5">
+                  ID &bull;&bull;&bull;{memberIds[activeMember].slice(-5)}
+                </div>
+              )}
             </div>
-            <button type="button" onClick={() => setActiveMember((i) => Math.min(members.length - 1, i + 1))} disabled={activeMember === members.length - 1} className="p-1.5 rounded-md border border-stone-300 dark:border-neutral-700 disabled:opacity-30 hover:bg-white dark:hover:bg-neutral-800">
+            <button type="button" onClick={() => setActiveMember((i) => Math.min(members.length - 1, i + 1))} disabled={activeMember === members.length - 1} className={"p-1.5 rounded-md border border-stone-300 dark:border-neutral-700 disabled:opacity-30 hover:bg-white dark:hover:bg-neutral-800 " + focusRingClass}>
               <ChevronRight className="w-4 h-4 dark:text-stone-300" />
             </button>
           </div>
@@ -177,14 +188,14 @@ export default function WeeklyCollection({ shgName, members, onBackHome }) {
               <button
                 type="button"
                 onClick={() => setViewMode("compact")}
-                className={`px-3 py-1.5 text-xs font-semibold whitespace-nowrap ${viewMode === "compact" ? "bg-emerald-700 dark:bg-emerald-600 text-white" : "bg-white dark:bg-neutral-950 text-stone-600 dark:text-neutral-400 hover:bg-stone-50 dark:hover:bg-neutral-900"}`}
+                className={`px-3 py-1.5 text-xs font-semibold whitespace-nowrap ${viewMode === "compact" ? "bg-emerald-700 dark:bg-emerald-600 text-white" : "bg-white dark:bg-neutral-950 text-stone-600 dark:text-neutral-400 hover:bg-stone-50 dark:hover:bg-neutral-900"} ${focusRingClass}`}
               >
                 Compact<span className="hidden sm:inline"> (one month)</span>
               </button>
               <button
                 type="button"
                 onClick={() => setViewMode("all")}
-                className={`px-3 py-1.5 text-xs font-semibold whitespace-nowrap border-l border-stone-300 dark:border-neutral-700 ${viewMode === "all" ? "bg-emerald-700 dark:bg-emerald-600 text-white" : "bg-white dark:bg-neutral-950 text-stone-600 dark:text-neutral-400 hover:bg-stone-50 dark:hover:bg-neutral-900"}`}
+                className={`px-3 py-1.5 text-xs font-semibold whitespace-nowrap border-l border-stone-300 dark:border-neutral-700 ${viewMode === "all" ? "bg-emerald-700 dark:bg-emerald-600 text-white" : "bg-white dark:bg-neutral-950 text-stone-600 dark:text-neutral-400 hover:bg-stone-50 dark:hover:bg-neutral-900"} ${focusRingClass}`}
               >
                 All months
               </button>
@@ -192,7 +203,7 @@ export default function WeeklyCollection({ shgName, members, onBackHome }) {
 
             {viewMode === "compact" && (
               <div className="flex items-center gap-1.5">
-                <button type="button" onClick={() => setActiveMonth((i) => Math.max(0, i - 1))} disabled={activeMonth === 0} className="shrink-0 p-1.5 rounded-md border border-stone-300 dark:border-neutral-700 disabled:opacity-30 hover:bg-stone-50 dark:hover:bg-neutral-900">
+                <button type="button" onClick={() => setActiveMonth((i) => Math.max(0, i - 1))} disabled={activeMonth === 0} className={"shrink-0 p-1.5 rounded-md border border-stone-300 dark:border-neutral-700 disabled:opacity-30 hover:bg-stone-50 dark:hover:bg-neutral-900 " + focusRingClass}>
                   <ChevronLeft className="w-4 h-4 dark:text-stone-300" />
                 </button>
                 <select
@@ -204,14 +215,14 @@ export default function WeeklyCollection({ shgName, members, onBackHome }) {
                     <option key={mo.key} value={i}>{MONTHS[mo.month]} {mo.year}</option>
                   ))}
                 </select>
-                <button type="button" onClick={() => setActiveMonth((i) => Math.min(report.months.length - 1, i + 1))} disabled={activeMonth === report.months.length - 1} className="shrink-0 p-1.5 rounded-md border border-stone-300 dark:border-neutral-700 disabled:opacity-30 hover:bg-stone-50 dark:hover:bg-neutral-900">
+                <button type="button" onClick={() => setActiveMonth((i) => Math.min(report.months.length - 1, i + 1))} disabled={activeMonth === report.months.length - 1} className={"shrink-0 p-1.5 rounded-md border border-stone-300 dark:border-neutral-700 disabled:opacity-30 hover:bg-stone-50 dark:hover:bg-neutral-900 " + focusRingClass}>
                   <ChevronRight className="w-4 h-4 dark:text-stone-300" />
                 </button>
                 {todayMonthIndex !== -1 && activeMonth !== todayMonthIndex && (
                   <button
                     type="button"
                     onClick={() => setActiveMonth(todayMonthIndex)}
-                    className="shrink-0 whitespace-nowrap text-xs font-semibold text-emerald-700 dark:text-emerald-400 border border-emerald-600 dark:border-emerald-500 rounded-md px-2 py-1.5 hover:bg-emerald-50 dark:hover:bg-emerald-950"
+                    className={"shrink-0 whitespace-nowrap text-xs font-semibold text-emerald-700 dark:text-emerald-400 border border-emerald-600 dark:border-emerald-500 rounded-md px-2 py-1.5 hover:bg-emerald-50 dark:hover:bg-emerald-950 " + focusRingClass}
                   >
                     Today
                   </button>

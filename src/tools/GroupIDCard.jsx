@@ -6,10 +6,12 @@ import { ArrowLeft, Printer } from "lucide-react";
 // handed to a bank/scheme officer or kept as a physical group record.
 //
 // The QR code encodes a short text summary (name, member count, location,
-// date) via a public QR-rendering API — NOT member names, and NOT a link to
-// any live database, since this app has no backend to verify against yet.
-// If a verification endpoint exists later, swap `qrPayload` for a URL to it.
-export default function GroupIDCard({ shgName, members, location, onBackHome }) {
+// date) via a public QR-rendering API — NOT member names, NOT individual
+// member IDs, and NOT a link to any live database, since this app has no
+// backend to verify against yet. If a verification endpoint exists later,
+// swap `qrPayload` for a URL to it.
+export default function GroupIDCard({ shgName, members, memberIds = [], location, onBackHome }) {
+  const hasAnyId = memberIds.some((id) => id);
   const generatedDate = new Date().toLocaleDateString("en-IN", {
     day: "2-digit",
     month: "long",
@@ -78,11 +80,30 @@ export default function GroupIDCard({ shgName, members, location, onBackHome }) 
               <div className="text-[11px] font-semibold uppercase tracking-wide text-stone-400 dark:text-neutral-500 mb-2">
                 Member List
               </div>
-              <ol className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-sm list-decimal list-inside marker:text-stone-400 dark:marker:text-neutral-600">
-                {members.map((m, i) => (
-                  <li key={i}>{m}</li>
-                ))}
-              </ol>
+              <div className="border border-stone-200 dark:border-neutral-800 rounded-md overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-stone-50 dark:bg-neutral-900 text-[10px] uppercase tracking-wide text-stone-500 dark:text-neutral-400">
+                      <th className="px-3 py-2 text-left font-semibold w-10">Sl.</th>
+                      <th className="px-3 py-2 text-left font-semibold">Name</th>
+                      {hasAnyId && <th className="px-3 py-2 text-right font-semibold">Member ID</th>}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-stone-100 dark:divide-neutral-900">
+                    {members.map((m, i) => (
+                      <tr key={i} className={i % 2 === 1 ? "bg-stone-50/60 dark:bg-neutral-900/40" : ""}>
+                        <td className="px-3 py-2 font-mono text-xs text-stone-400 dark:text-neutral-600">{i + 1}</td>
+                        <td className="px-3 py-2 text-stone-800 dark:text-stone-200">{m}</td>
+                        {hasAnyId && (
+                          <td className="px-3 py-2 text-right font-mono text-xs text-stone-500 dark:text-neutral-500">
+                            {memberIds[i] || "—"}
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             <div className="flex items-end justify-between border-t border-stone-100 dark:border-neutral-900 pt-4 gap-4">
@@ -102,7 +123,7 @@ export default function GroupIDCard({ shgName, members, location, onBackHome }) 
         </div>
 
         <p className="no-print text-[11px] text-stone-400 dark:text-neutral-600 mt-4 text-center leading-relaxed">
-          The QR code encodes the summary above (SHG name, member count, location, date — no member names) for quick
+          The QR code encodes the summary above (SHG name, member count, location, date — no member names or IDs) for quick
           reference. It isn't linked to a live database.
         </p>
       </div>
