@@ -6,6 +6,7 @@ import GroupIDCard from "./tools/GroupIDCard.jsx";
 import ThemeToggle from "./components/ThemeToggle.jsx";
 import { useTheme } from "./lib/theme.js";
 import { SHG_DIRECTORY, flattenDirectory } from "./lib/shgDirectory.js";
+import { findRosterByName } from "./lib/memberRosters.js";
 
 const inputClass =
   "w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 dark:border-neutral-700 dark:bg-neutral-950 dark:text-stone-100 dark:focus:ring-emerald-500 dark:focus:border-emerald-500 dark:placeholder:text-neutral-600";
@@ -145,12 +146,24 @@ export default function App() {
 
   function pickGroup(group) {
     setShgName(group.name);
-    setNumMembers(group.members);
-    setMemberNames([]);
     setSelectedPath(group.path);
     setSuggestOpen(false);
     setActiveSuggestIndex(-1);
     setShowBrowse(false);
+
+    // If a real member roster has been transcribed for this SHG, use it —
+    // exact names, correct count, and reveal the (still fully editable)
+    // names grid right away. Otherwise fall back to the manual-entry flow
+    // exactly as before.
+    const roster = findRosterByName(group.name);
+    if (roster) {
+      setNumMembers(roster.members.length);
+      setMemberNames(roster.members.map((m) => m.name));
+      setShowNames(true);
+    } else {
+      setNumMembers(group.members);
+      setMemberNames([]);
+    }
   }
 
   // Arrow-key/Enter/Escape navigation for the autocomplete listbox.
