@@ -497,30 +497,30 @@ export default function App() {
                 {showNames ? "Hide member names" : "Add member names (optional)"}
               </button>
               {showNames && (
-                <div className="mt-3">
-                  <div className="hidden sm:flex gap-2 px-0.5 mb-1">
-                    <span className="flex-1 text-[11px] font-semibold uppercase tracking-wide text-stone-400 dark:text-neutral-500">Name</span>
-                    <span className="w-32 shrink-0 text-[11px] font-semibold uppercase tracking-wide text-stone-400 dark:text-neutral-500">ID (optional)</span>
-                  </div>
-                  <div className="space-y-2 max-h-56 overflow-y-auto slim-scroll pr-1">
-                    {Array.from({ length: numMembers }).map((_, i) => (
-                      <div key={i} className="flex gap-2">
+                <div className="mt-3 space-y-2 max-h-56 overflow-y-auto slim-scroll pr-1">
+                  {Array.from({ length: numMembers }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="rounded-md border border-stone-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 focus-within:ring-2 focus-within:ring-emerald-600 dark:focus-within:ring-emerald-500 focus-within:border-emerald-600 dark:focus-within:border-emerald-500 overflow-hidden"
+                    >
+                      <input
+                        className="w-full px-3 pt-2 pb-0.5 text-sm text-stone-900 dark:text-stone-100 bg-transparent focus:outline-none placeholder:text-stone-400 dark:placeholder:text-neutral-600"
+                        placeholder={`Member ${i + 1}`}
+                        value={memberNames[i] || ""}
+                        onChange={(e) => updateMemberName(i, e.target.value)}
+                      />
+                      <div className="flex items-center gap-1.5 px-3 pb-1.5">
+                        <span className="text-[10px] font-semibold uppercase tracking-wide text-stone-400 dark:text-neutral-600 shrink-0">ID</span>
                         <input
-                          className={inputClass + " flex-1"}
-                          placeholder={`Member ${i + 1}`}
-                          value={memberNames[i] || ""}
-                          onChange={(e) => updateMemberName(i, e.target.value)}
-                        />
-                        <input
-                          className={inputClass + " w-32 shrink-0 font-mono"}
-                          placeholder="ID"
+                          className="flex-1 min-w-0 text-xs font-mono text-stone-500 dark:text-neutral-500 bg-transparent focus:outline-none placeholder:text-stone-300 dark:placeholder:text-neutral-700"
+                          placeholder="optional"
                           inputMode="numeric"
                           value={memberIds[i] || ""}
                           onChange={(e) => updateMemberId(i, e.target.value)}
                         />
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
