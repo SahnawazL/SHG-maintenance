@@ -34,6 +34,25 @@ export const MEMBER_ROSTERS = {
       { name: "SHALLY BEGUM BARBHUIYA", guardianName: "ATAUR RAHMAN BARBHUIYA", memberId: "40025380682" },
     ],
   },
+  "4002671498": {
+    shgName: "REMA S.H.G",
+    district: "CACHAR",
+    block: "SILCHAR",
+    gp: "BERENGA",
+    village: "BERENGAPTII",
+    members: [
+      { name: "BULI BEGUM LASKAR", guardianName: "KHAJEN UDDIN LASKAR", memberId: "40023699244" },
+      { name: "KALPANA BEGUM LASKAR", guardianName: "SUJON UDDIN LASKAR", memberId: "40023699259" },
+      { name: "MAFIJA BEGUM CHOUDHURY", guardianName: "MOTIBUR RAHMAN CHOUDHRY", memberId: "40023699263" },
+      { name: "MONJILA BEGUM LASKAR", guardianName: "LILU LASKAR", memberId: "40023699271" },
+      { name: "RUBI BEGUM LASKAR", guardianName: "MAJAKKIR HUSSAIN LASKAR", memberId: "40023699285" },
+      { name: "SAYMA BEGUM LASKAR", guardianName: "SHILU LASKAR", memberId: "40023699292" },
+      { name: "SULTANA BEGUM LASKAR", guardianName: "ASIK UDDIN LASKAR", memberId: "40023699302" },
+      { name: "SUMON BEGUM LASKAR", guardianName: "HUJAIL AHMED LASKAR", memberId: "40023699318" },
+      { name: "TARUNA BEGUM LASKAR", guardianName: "RANJU LASKAE", memberId: "40023699325" },
+      { name: "YESINARA BEGUM LASKAR", guardianName: "MASTAK AHMED LASKAR", memberId: "40023699339" },
+    ],
+  },
 };
 
 // Looks up a roster by SHG name (case-insensitive exact match). Returns
